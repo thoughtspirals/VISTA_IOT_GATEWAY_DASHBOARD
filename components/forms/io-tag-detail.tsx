@@ -1,48 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { 
-  Plus, 
-  Edit, 
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Edit,
   Trash2,
   Tags,
   MoreVertical,
   X,
   ChevronDown,
   Save,
-  FileDown
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog"
-import { 
+  FileDown,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -51,17 +51,23 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { useToast } from "@/components/ui/use-toast"
-import { useConfigStore, type ConfigState } from '@/lib/stores/configuration-store';
-import type { IOPortConfig } from './io-tag-form';
-import type { DeviceConfig } from './device-form';
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  useConfigStore,
+  type ConfigState,
+} from "@/lib/stores/configuration-store";
+import type { IOPortConfig } from "./io-tag-form";
+import type { DeviceConfig } from "./device-form";
 // IOTag interface is defined and exported in this file, no need for self-import.
 
 const CONVERSION_OPTIONS = [
   { value: "UINT, Big Endian (ABCD)", defaultLength: 16 },
   { value: "INT, Big Endian (ABCD)", defaultLength: 16 },
-  { value: "UINT32, Modicon Double Precision (reg1*10000+reg2)", defaultLength: 32 },
+  {
+    value: "UINT32, Modicon Double Precision (reg1*10000+reg2)",
+    defaultLength: 32,
+  },
   { value: "FLOAT, Big Endian (ABCD)", defaultLength: 32 },
   { value: "FLOAT, Big Endian, Swap Word (CDAB)", defaultLength: 32 },
   { value: "INT, Big Endian, Swap Word (CDAB)", defaultLength: 16 },
@@ -87,47 +93,55 @@ const CONVERSION_OPTIONS = [
 ];
 
 export interface IOTag {
-  id: string
-  name: string
-  dataType: string
-  registerType?: string 
-  address: string
-  description: string
-  source?: string
-  defaultValue?: string | number
-  scanRate?: number
-  conversionType?: string
-  scaleType?: string
-  readWrite?: string
-  startBit?: number
-  lengthBit?: number
-  spanLow?: number
-  spanHigh?: number
-  formula?: string
-  scale?: number
-  offset?: number
-  clampToLow?: boolean
-  clampToHigh?: boolean
-  clampToZero?: boolean
-  signalReversal?: boolean
-  value0?: string
-  value1?: string
+  id: string;
+  name: string;
+  dataType: string;
+  registerType?: string;
+  address: string;
+  description: string;
+  source?: string;
+  defaultValue?: string | number;
+  scanRate?: number;
+  conversionType?: string;
+  scaleType?: string;
+  readWrite?: string;
+  startBit?: number;
+  lengthBit?: number;
+  spanLow?: number;
+  spanHigh?: number;
+  formula?: string;
+  scale?: number;
+  offset?: number;
+  clampToLow?: boolean;
+  clampToHigh?: boolean;
+  clampToZero?: boolean;
+  signalReversal?: boolean;
+  value0?: string;
+  value1?: string;
 }
 
 interface IOTagDetailProps {
-  device: DeviceConfig
-  portId: string
-  onUpdate?: (portId: string, deviceId: string, tags: IOTag[]) => void
+  device: DeviceConfig;
+  portId: string;
+  onUpdate?: (portId: string, deviceId: string, tags: IOTag[]) => void;
 }
 
-export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpdate }: IOTagDetailProps) {
+export function IOTagDetailView({
+  device: initialDeviceFromProps,
+  portId,
+  onUpdate,
+}: IOTagDetailProps) {
   const { getConfig, updateConfig } = useConfigStore();
 
   const deviceToDisplay = useConfigStore((state: ConfigState) => {
     // With ConfigSchema, state.config.io_setup.ports should be correctly typed as IOPortConfig[]
-    const port = state.config.io_setup?.ports?.find((p: IOPortConfig) => p.id === portId);
+    const port = state.config.io_setup?.ports?.find(
+      (p: IOPortConfig) => p.id === portId
+    );
     if (port && port.devices) {
-      const deviceInStore = port.devices.find((d: DeviceConfig) => d.id === initialDeviceFromProps.id);
+      const deviceInStore = port.devices.find(
+        (d: DeviceConfig) => d.id === initialDeviceFromProps.id
+      );
       if (deviceInStore) {
         return deviceInStore;
       }
@@ -137,62 +151,78 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
 
   const tagsToDisplay: IOTag[] = deviceToDisplay?.tags || [];
 
-  const { toast } = useToast()
-  
+  const { toast } = useToast();
+
   // State for the table and selection
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [tagFormOpen, setTagFormOpen] = useState(false)
-  const [editingTag, setEditingTag] = useState<IOTag | null>(null)
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagFormOpen, setTagFormOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<IOTag | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const handleTagSelection = (tagId: string) => {
-    setSelectedTags(prev => {
+    setSelectedTags((prev) => {
       if (prev.includes(tagId)) {
-        return prev.filter(id => id !== tagId)
+        return prev.filter((id) => id !== tagId);
       } else {
-        return [...prev, tagId]
+        return [...prev, tagId];
       }
-    })
-  }
-  
+    });
+  };
+
   const handleAddTag = () => {
-    setEditingTag(null)
-    setTagFormOpen(true)
-  }
-  
+    setEditingTag(null);
+    setTagFormOpen(true);
+  };
+
   const handleEditTag = () => {
-    if (selectedTags.length !== 1) return
-    
-    const tagToEdit = tagsToDisplay.find((tag: IOTag) => tag.id === selectedTags[0])
+    if (selectedTags.length !== 1) return;
+
+    const tagToEdit = tagsToDisplay.find(
+      (tag: IOTag) => tag.id === selectedTags[0]
+    );
     if (tagToEdit) {
-      setEditingTag(tagToEdit)
-      setTagFormOpen(true)
+      setEditingTag(tagToEdit);
+      setTagFormOpen(true);
     }
-  }
-  
+  };
+
   const handleDeleteClick = () => {
     if (selectedTags.length === 0) return;
     setDeleteConfirmOpen(true);
-  }
+  };
 
   const handleDeleteConfirm = () => {
-    const updatedTagsForDevice = (tagsToDisplay || []).filter((tag: IOTag) => !selectedTags.includes(tag.id));
+    const updatedTagsForDevice = (tagsToDisplay || []).filter(
+      (tag: IOTag) => !selectedTags.includes(tag.id)
+    );
 
     // Update global store
     const allPortsFromStore: IOPortConfig[] = getConfig().io_setup?.ports || [];
-    const portIndex = allPortsFromStore.findIndex((p: IOPortConfig) => p.id === portId);
+    const portIndex = allPortsFromStore.findIndex(
+      (p: IOPortConfig) => p.id === portId
+    );
 
     if (portIndex === -1) {
-      toast({ title: "Error", description: `Port ${portId} not found.`, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: `Port ${portId} not found.`,
+        variant: "destructive",
+      });
       setDeleteConfirmOpen(false);
       return;
     }
 
     const targetPort = { ...allPortsFromStore[portIndex] };
-    const deviceIndex = targetPort.devices.findIndex((d: DeviceConfig) => d.id === deviceToDisplay.id);
+    const deviceIndex = targetPort.devices.findIndex(
+      (d: DeviceConfig) => d.id === deviceToDisplay.id
+    );
 
     if (deviceIndex === -1) {
-      toast({ title: "Error", description: `Device ${deviceToDisplay.name} not found in port ${targetPort.name}.`, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: `Device ${deviceToDisplay.name} not found in port ${targetPort.name}.`,
+        variant: "destructive",
+      });
       setDeleteConfirmOpen(false);
       return;
     }
@@ -200,9 +230,13 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
     const targetDevice = { ...targetPort.devices[deviceIndex] };
     targetDevice.tags = updatedTagsForDevice;
 
-    targetPort.devices = targetPort.devices.map((d: DeviceConfig) => d.id === deviceToDisplay.id ? targetDevice : d);
-    const finalUpdatedPorts = allPortsFromStore.map((p: IOPortConfig) => p.id === portId ? targetPort : p);
-    updateConfig(['io_setup', 'ports'], finalUpdatedPorts);
+    targetPort.devices = targetPort.devices.map((d: DeviceConfig) =>
+      d.id === deviceToDisplay.id ? targetDevice : d
+    );
+    const finalUpdatedPorts = allPortsFromStore.map((p: IOPortConfig) =>
+      p.id === portId ? targetPort : p
+    );
+    updateConfig(["io_setup", "ports"], finalUpdatedPorts);
 
     setSelectedTags([]);
     setDeleteConfirmOpen(false);
@@ -211,60 +245,76 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
       title: "IO Tags Deleted",
       description: `${selectedTags.length} tag(s) have been deleted from ${deviceToDisplay.name}.`,
     });
-  }
-  
+  };
+
   const handleSaveTag = (newTag: IOTag) => {
-    let updatedTags: IOTag[]
-    
+    let updatedTags: IOTag[];
+
     if (editingTag) {
       // Update existing tag
-      updatedTags = (tagsToDisplay || []).map((tag: IOTag) => 
+      updatedTags = (tagsToDisplay || []).map((tag: IOTag) =>
         tag.id === editingTag.id ? newTag : tag
       );
-      
+
       toast({
         title: "IO Tag Updated",
         description: `Successfully updated tag: ${newTag.name}`,
-      })
+      });
     } else {
       // Add new tag
       updatedTags = [...(tagsToDisplay || []), newTag];
-      
+
       toast({
         title: "IO Tag Added",
         description: `Successfully added tag: ${newTag.name}`,
-      })
+      });
     }
-    
+
     // Update global store
     const allPortsFromStore: IOPortConfig[] = getConfig().io_setup?.ports || [];
-    const portIndex = allPortsFromStore.findIndex((p: IOPortConfig) => p.id === portId);
+    const portIndex = allPortsFromStore.findIndex(
+      (p: IOPortConfig) => p.id === portId
+    );
 
     if (portIndex === -1) {
-      toast({ title: "Error", description: `Port ${portId} not found.`, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: `Port ${portId} not found.`,
+        variant: "destructive",
+      });
       setTagFormOpen(false);
       return;
     }
 
     const targetPort = { ...allPortsFromStore[portIndex] };
-    const deviceIndex = targetPort.devices.findIndex((d: DeviceConfig) => d.id === deviceToDisplay.id);
+    const deviceIndex = targetPort.devices.findIndex(
+      (d: DeviceConfig) => d.id === deviceToDisplay.id
+    );
 
     if (deviceIndex === -1) {
-      toast({ title: "Error", description: `Device ${deviceToDisplay.name} not found in port ${targetPort.name}.`, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: `Device ${deviceToDisplay.name} not found in port ${targetPort.name}.`,
+        variant: "destructive",
+      });
       setTagFormOpen(false);
       return;
     }
 
     const targetDeviceToUpdate = { ...targetPort.devices[deviceIndex] };
-    targetDeviceToUpdate.tags = updatedTags; 
-    
-    targetPort.devices = targetPort.devices.map((d: DeviceConfig) => d.id === deviceToDisplay.id ? targetDeviceToUpdate : d);
-    const finalUpdatedPorts = allPortsFromStore.map((p: IOPortConfig) => p.id === portId ? targetPort : p);
-    updateConfig(['io_setup', 'ports'], finalUpdatedPorts);
+    targetDeviceToUpdate.tags = updatedTags;
 
-    setTagFormOpen(false)
-    setEditingTag(null)
-  }
+    targetPort.devices = targetPort.devices.map((d: DeviceConfig) =>
+      d.id === deviceToDisplay.id ? targetDeviceToUpdate : d
+    );
+    const finalUpdatedPorts = allPortsFromStore.map((p: IOPortConfig) =>
+      p.id === portId ? targetPort : p
+    );
+    updateConfig(["io_setup", "ports"], finalUpdatedPorts);
+
+    setTagFormOpen(false);
+    setEditingTag(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -281,15 +331,15 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
           <Button onClick={handleAddTag}>
             <Plus className="h-4 w-4 mr-2" /> Add
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleEditTag}
             disabled={selectedTags.length !== 1}
           >
             <Edit className="h-4 w-4 mr-2" /> Modify
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleDeleteClick}
             disabled={selectedTags.length === 0}
           >
@@ -297,7 +347,7 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
           </Button>
         </div>
       </div>
-      
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -319,21 +369,27 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
             <TableBody>
               {tagsToDisplay.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-6 text-muted-foreground">
-                    No IO tags configured for this device. Click "Add" to create a new tag.
+                  <TableCell
+                    colSpan={11}
+                    className="text-center py-6 text-muted-foreground"
+                  >
+                    No IO tags configured for this device. Click "Add" to create
+                    a new tag.
                   </TableCell>
                 </TableRow>
               ) : (
                 tagsToDisplay.map((tag: IOTag) => (
-                  <TableRow 
-                    key={tag.id} 
-                    className={selectedTags.includes(tag.id) ? "bg-muted/50" : ""}
+                  <TableRow
+                    key={tag.id}
+                    className={
+                      selectedTags.includes(tag.id) ? "bg-muted/50" : ""
+                    }
                     onClick={() => handleTagSelection(tag.id)}
                   >
                     <TableCell>
-                      <Checkbox 
-                        checked={selectedTags.includes(tag.id)} 
-                        onCheckedChange={() => handleTagSelection(tag.id)} 
+                      <Checkbox
+                        checked={selectedTags.includes(tag.id)}
+                        onCheckedChange={() => handleTagSelection(tag.id)}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{tag.name}</TableCell>
@@ -342,10 +398,14 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
                     <TableCell>{tag.defaultValue || "0.0"}</TableCell>
                     <TableCell>{tag.scanRate || "1"}</TableCell>
                     <TableCell>{tag.address}</TableCell>
-                    <TableCell>{tag.conversionType || "FLOAT, Big Endian (ABCD)"}</TableCell>
+                    <TableCell>
+                      {tag.conversionType || "FLOAT, Big Endian (ABCD)"}
+                    </TableCell>
                     <TableCell>{tag.scaleType || "No Scale"}</TableCell>
                     <TableCell>{tag.readWrite || "Read/Write"}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{tag.description}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      {tag.description}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -353,77 +413,99 @@ export function IOTagDetailView({ device: initialDeviceFromProps, portId, onUpda
           </Table>
         </CardContent>
       </Card>
-      
+
       {/* Tag Form Dialog */}
       <Dialog open={tagFormOpen} onOpenChange={setTagFormOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingTag ? "Modify IO Tag" : "Add New IO Tag"}</DialogTitle>
+            <DialogTitle>
+              {editingTag ? "Modify IO Tag" : "Add New IO Tag"}
+            </DialogTitle>
             <DialogDescription>
-              Configure the IO tag properties for data acquisition and processing
+              Configure the IO tag properties for data acquisition and
+              processing
             </DialogDescription>
           </DialogHeader>
-          
-          <TagForm 
-            onSave={handleSaveTag} 
-            onCancel={() => setTagFormOpen(false)} 
-            existingTag={editingTag} 
+
+          <TagForm
+            onSave={handleSaveTag}
+            onCancel={() => setTagFormOpen(false)}
+            existingTag={editingTag}
           />
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete {selectedTags.length} IO tag(s). This action cannot be undone.
+              This will permanently delete {selectedTags.length} IO tag(s). This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleDeleteConfirm()}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={() => handleDeleteConfirm()}>
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
 
 interface TagFormProps {
-  onSave: (tag: IOTag) => void
-  onCancel: () => void
-  existingTag?: IOTag | null
+  onSave: (tag: IOTag) => void;
+  onCancel: () => void;
+  existingTag?: IOTag | null;
 }
 
 function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
-  const [activeTab, setActiveTab] = useState("basic")
-  
+  const [activeTab, setActiveTab] = useState("basic");
+
   // Form state
-  const [name, setName] = useState(existingTag?.name || "")
-  const [dataType, setDataType] = useState(existingTag?.dataType || "Analog")
-  const [registerType, setRegisterType] = useState(existingTag?.registerType || "")
-  const [conversion, setConversion] = useState(existingTag?.conversionType || "") // Default to empty or existing
-  const [address, setAddress] = useState(existingTag?.address || "")
-  const [startBit, setStartBit] = useState(existingTag?.startBit || 0)
-  const [lengthBit, setLengthBit] = useState(existingTag?.lengthBit || 64)
-  const [spanLow, setSpanLow] = useState(existingTag?.spanLow || 0)
-  const [spanHigh, setSpanHigh] = useState(existingTag?.spanHigh || 1000)
-  const [defaultValue, setDefaultValue] = useState(existingTag?.defaultValue || 0.0)
-  const [scanRate, setScanRate] = useState(existingTag?.scanRate || 1)
-  const [readWrite, setReadWrite] = useState(existingTag?.readWrite || "Read/Write")
-  const [description, setDescription] = useState(existingTag?.description || "")
+  const [name, setName] = useState(existingTag?.name || "");
+  const [dataType, setDataType] = useState(existingTag?.dataType || "Analog");
+  const [registerType, setRegisterType] = useState(
+    existingTag?.registerType || ""
+  );
+  const [conversion, setConversion] = useState(
+    existingTag?.conversionType || ""
+  ); // Default to empty or existing
+  const [address, setAddress] = useState(existingTag?.address || "");
+  const [startBit, setStartBit] = useState(existingTag?.startBit || 0);
+  const [lengthBit, setLengthBit] = useState(existingTag?.lengthBit || 64);
+  const [spanLow, setSpanLow] = useState(existingTag?.spanLow || 0);
+  const [spanHigh, setSpanHigh] = useState(existingTag?.spanHigh || 1000);
+  const [defaultValue, setDefaultValue] = useState(
+    existingTag?.defaultValue || 0.0
+  );
+  const [scanRate, setScanRate] = useState(existingTag?.scanRate || 1);
+  const [readWrite, setReadWrite] = useState(
+    existingTag?.readWrite || "Read/Write"
+  );
+  const [description, setDescription] = useState(
+    existingTag?.description || ""
+  );
   // New state for Discrete fields
-  const [signalReversal, setSignalReversal] = useState(existingTag?.signalReversal ?? false)
-  const [value0, setValue0] = useState(existingTag?.value0 || "")
-  const [value1, setValue1] = useState(existingTag?.value1 || "")
+  const [signalReversal, setSignalReversal] = useState(
+    existingTag?.signalReversal ?? false
+  );
+  const [value0, setValue0] = useState(existingTag?.value0 || "");
+  const [value1, setValue1] = useState(existingTag?.value1 || "");
 
   // When dataType changes, reset registerType and set default if applicable
   useEffect(() => {
     // Manage dependent fields and active tab when dataType changes
     if (dataType === "Analog") {
-      setRegisterType(existingTag?.registerType && existingTag?.dataType === "Analog" ? existingTag.registerType : "Coil");
+      setRegisterType(
+        existingTag?.registerType && existingTag?.dataType === "Analog"
+          ? existingTag.registerType
+          : "Coil"
+      );
       // If a conversion is already selected, its length will be set by the other useEffect.
       // Otherwise, default to 64 or existing if no specific conversion is yet picked.
       if (!conversion) {
@@ -433,7 +515,11 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
         setActiveTab("basic");
       }
     } else if (dataType === "Discrete") {
-      setRegisterType(existingTag?.registerType && existingTag?.dataType === "Discrete" ? existingTag.registerType : "Input");
+      setRegisterType(
+        existingTag?.registerType && existingTag?.dataType === "Discrete"
+          ? existingTag.registerType
+          : "Input"
+      );
       setLengthBit(1); // Fixed length for Discrete
       setSignalReversal(existingTag?.signalReversal ?? false);
       setValue0(existingTag?.value0 || ""); // Default to empty string
@@ -450,36 +536,56 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
         setActiveTab("basic");
       }
     }
-  }, [dataType, conversion, existingTag?.dataType, existingTag?.registerType, existingTag?.lengthBit, existingTag?.signalReversal, existingTag?.value0, existingTag?.value1, activeTab]);
+  }, [
+    dataType,
+    conversion,
+    existingTag?.dataType,
+    existingTag?.registerType,
+    existingTag?.lengthBit,
+    existingTag?.signalReversal,
+    existingTag?.value0,
+    existingTag?.value1,
+    activeTab,
+  ]);
 
   // Effect to update lengthBit based on selected conversion for Analog type
   useEffect(() => {
     if (dataType === "Analog" && conversion) {
-      const selectedOption = CONVERSION_OPTIONS.find(opt => opt.value === conversion);
+      const selectedOption = CONVERSION_OPTIONS.find(
+        (opt) => opt.value === conversion
+      );
       if (selectedOption) {
         setLengthBit(selectedOption.defaultLength);
       } else {
         // If conversion is somehow not in our list, revert to a default or make editable
         // For now, let's assume it will always be in the list if selected.
         // Consider setting a general default like 64 if needed, or clear it to force user input if not read-only.
-        setLengthBit(existingTag?.lengthBit || 64); 
+        setLengthBit(existingTag?.lengthBit || 64);
       }
     } else if (dataType !== "Analog") {
       // If not Analog, lengthBit is handled by the other useEffect (e.g., set to 1 for Discrete)
     }
   }, [dataType, conversion, existingTag?.lengthBit]);
 
-  const [scaleType, setScaleType] = useState(existingTag?.scaleType || "No Scale")
-  const [formula, setFormula] = useState(existingTag?.formula || "")
-  const [scale, setScale] = useState(existingTag?.scale || 1)
-  const [offset, setOffset] = useState(existingTag?.offset || 0)
-  const [clampToLow, setClampToLow] = useState(existingTag?.clampToLow || false)
-  const [clampToHigh, setClampToHigh] = useState(existingTag?.clampToHigh || false)
-  const [clampToZero, setClampToZero] = useState(existingTag?.clampToZero || false)
+  const [scaleType, setScaleType] = useState(
+    existingTag?.scaleType || "No Scale"
+  );
+  const [formula, setFormula] = useState(existingTag?.formula || "");
+  const [scale, setScale] = useState(existingTag?.scale || 1);
+  const [offset, setOffset] = useState(existingTag?.offset || 0);
+  const [clampToLow, setClampToLow] = useState(
+    existingTag?.clampToLow || false
+  );
+  const [clampToHigh, setClampToHigh] = useState(
+    existingTag?.clampToHigh || false
+  );
+  const [clampToZero, setClampToZero] = useState(
+    existingTag?.clampToZero || false
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     const newTag: IOTag = {
       id: existingTag?.id || `tag-${Date.now()}`,
       name,
@@ -505,25 +611,31 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
       // Add new discrete fields
       signalReversal: dataType === "Discrete" ? signalReversal : undefined,
       value0: dataType === "Discrete" ? value0 : undefined,
-      value1: dataType === "Discrete" ? value1 : undefined
-    }
-    
-    onSave(newTag)
-  }
+      value1: dataType === "Discrete" ? value1 : undefined,
+    };
+
+    onSave(newTag);
+  };
 
   return (
     <form onSubmit={handleSubmit}>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full">
-          <TabsTrigger value="basic" className="flex-1">Basic</TabsTrigger>
+          <TabsTrigger value="basic" className="flex-1">
+            Basic
+          </TabsTrigger>
           {dataType === "Analog" && (
-            <TabsTrigger value="advanced" className="flex-1">Advanced</TabsTrigger>
+            <TabsTrigger value="advanced" className="flex-1">
+              Advanced
+            </TabsTrigger>
           )}
           {dataType === "Discrete" && (
-            <TabsTrigger value="tagValueDescriptor" className="flex-1">Tag Value Descriptor</TabsTrigger>
+            <TabsTrigger value="tagValueDescriptor" className="flex-1">
+              Tag Value Descriptor
+            </TabsTrigger>
           )}
         </TabsList>
-        
+
         <TabsContent value="basic" className="space-y-4 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -536,7 +648,7 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="dataType">Data Type</Label>
               <Select value={dataType} onValueChange={setDataType}>
@@ -552,8 +664,8 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="registerType">Register Type</Label>
-              <Select 
-                value={registerType} 
+              <Select
+                value={registerType}
                 onValueChange={setRegisterType}
                 disabled={!dataType} // Disable if dataType is not selected
               >
@@ -564,7 +676,9 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                   {dataType === "Analog" && (
                     <>
                       <SelectItem value="Coil">Coil</SelectItem>
-                      <SelectItem value="Discrete Inputs">Discrete Inputs</SelectItem>
+                      <SelectItem value="Discrete Inputs">
+                        Discrete Inputs
+                      </SelectItem>
                     </>
                   )}
                   {dataType === "Discrete" && (
@@ -574,8 +688,12 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                     </>
                   )}
                   {/* Show a disabled item if dataType is not selected or doesn't match Analog/Discrete */}
-                  {(!dataType || (dataType !== "Analog" && dataType !== "Discrete")) && 
-                    <SelectItem value="" disabled>Select Data Type first</SelectItem>}
+                  {(!dataType ||
+                    (dataType !== "Analog" && dataType !== "Discrete")) && (
+                    <SelectItem value="" disabled>
+                      Select Data Type first
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -583,8 +701,8 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
             {dataType === "Discrete" && (
               <div className="space-y-2">
                 <Label htmlFor="signalReversal">Signal Reversal</Label>
-                <Select 
-                  value={signalReversal ? "True" : "False"} 
+                <Select
+                  value={signalReversal ? "True" : "False"}
                   onValueChange={(value) => setSignalReversal(value === "True")}
                 >
                   <SelectTrigger id="signalReversal">
@@ -597,25 +715,25 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 </Select>
               </div>
             )}
-            
+
             {dataType === "Analog" && (
-            <div className="space-y-2">
-              <Label htmlFor="conversion">Conversion</Label>
-              <Select value={conversion} onValueChange={setConversion}>
-                <SelectTrigger id="conversion">
-                  <SelectValue placeholder="Select conversion type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONVERSION_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="conversion">Conversion</Label>
+                <Select value={conversion} onValueChange={setConversion}>
+                  <SelectTrigger id="conversion">
+                    <SelectValue placeholder="Select conversion type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONVERSION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               <Input
@@ -626,7 +744,7 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="startBit">Start Bit</Label>
               <Input
@@ -635,53 +753,65 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 value={startBit}
                 onChange={(e) => setStartBit(Number(e.target.value))}
                 min={0}
+                max={255}
               />
             </div>
-            
+
             {/* Length (bit) - Conditional display and behavior */}
             {(dataType === "Analog" || dataType === "Discrete") && (
-            <div className="space-y-2">
-              <Label htmlFor="lengthBit">Length (bit)</Label>
-              <Input
-                id="lengthBit"
-                type="number"
-                value={lengthBit}
-                onChange={(e) => {
-                  // Only allow manual change if Analog and no specific conversion is selected (or if conversion doesn't dictate length)
-                  if (dataType === "Analog" && !CONVERSION_OPTIONS.find(opt => opt.value === conversion)) {
-                    setLengthBit(Number(e.target.value));
-                  }
-                }}
-                readOnly={dataType === "Discrete" || (dataType === "Analog" && !!CONVERSION_OPTIONS.find(opt => opt.value === conversion))} // Read-only for Discrete or if Analog and conversion selected
-                min={1}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="lengthBit">Length (bit)</Label>
+                <Input
+                  id="lengthBit"
+                  type="number"
+                  value={lengthBit}
+                  onChange={(e) => {
+                    // Only allow manual change if Analog and no specific conversion is selected (or if conversion doesn't dictate length)
+                    if (
+                      dataType === "Analog" &&
+                      !CONVERSION_OPTIONS.find(
+                        (opt) => opt.value === conversion
+                      )
+                    ) {
+                      setLengthBit(Number(e.target.value));
+                    }
+                  }}
+                  readOnly={
+                    dataType === "Discrete" ||
+                    (dataType === "Analog" &&
+                      !!CONVERSION_OPTIONS.find(
+                        (opt) => opt.value === conversion
+                      ))
+                  } // Read-only for Discrete or if Analog and conversion selected
+                  min={1}
+                />
+              </div>
             )}
-            
+
             {dataType === "Analog" && (
-            <div className="space-y-2">
-              <Label htmlFor="spanLow">Span Low</Label>
-              <Input
-                id="spanLow"
-                type="number"
-                value={spanLow}
-                onChange={(e) => setSpanLow(Number(e.target.value))}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="spanLow">Span Low</Label>
+                <Input
+                  id="spanLow"
+                  type="number"
+                  value={spanLow}
+                  onChange={(e) => setSpanLow(Number(e.target.value))}
+                />
+              </div>
             )}
-            
+
             {dataType === "Analog" && (
-            <div className="space-y-2">
-              <Label htmlFor="spanHigh">Span High</Label>
-              <Input
-                id="spanHigh"
-                type="number"
-                value={spanHigh}
-                onChange={(e) => setSpanHigh(Number(e.target.value))}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="spanHigh">Span High</Label>
+                <Input
+                  id="spanHigh"
+                  type="number"
+                  value={spanHigh}
+                  onChange={(e) => setSpanHigh(Number(e.target.value))}
+                />
+              </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="defaultValue">Default Value</Label>
               <Input
@@ -691,7 +821,7 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 onChange={(e) => setDefaultValue(Number(e.target.value))}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="scanRate">Scan Rate</Label>
               <Input
@@ -702,7 +832,7 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 min={1}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="readWrite">Read Write</Label>
               <Select value={readWrite} onValueChange={setReadWrite}>
@@ -715,7 +845,7 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2 col-span-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -728,95 +858,113 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
             </div>
           </div>
         </TabsContent>
-        
+
         {dataType === "Analog" && (
-        <TabsContent value="advanced" className="space-y-4 pt-4">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="scaleType">Scaling Type</Label>
-              <Select value={scaleType} onValueChange={setScaleType}>
-                <SelectTrigger id="scaleType">
-                  <SelectValue placeholder="Select scaling type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="No Scale">No Scale</SelectItem>
-                  <SelectItem value="Scale 0-100% Input to Span">Scale 0-100% Input to Span</SelectItem>
-                  <SelectItem value="Linear Scale, MX+B">Linear Scale, MX+B</SelectItem>
-                  <SelectItem value="Scale Defined Input H/L to Span">Scale Defined Input H/L to Span</SelectItem>
-                  <SelectItem value="Scale 12-Bit Input to Span">Scale 12-Bit Input to Span</SelectItem>
-                  <SelectItem value="Scale 0-100% Square Root Input">Scale 0-100% Square Root Input</SelectItem>
-                  <SelectItem value="Square Root of (Input/(F2-F1)) to Span">Square Root of (Input/(F2-F1)) to Span</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {scaleType === "Linear Scale, MX+B" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="formula">Formula</Label>
-                  <Input
-                    id="formula"
-                    value={formula}
-                    onChange={(e) => setFormula(e.target.value)}
-                    placeholder="Enter formula"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="scale">Scale (M)</Label>
-                  <Input
-                    id="scale"
-                    type="number"
-                    value={scale}
-                    onChange={(e) => setScale(Number(e.target.value))}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="offset">Offset (B)</Label>
-                  <Input
-                    id="offset"
-                    type="number"
-                    value={offset}
-                    onChange={(e) => setOffset(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-            )}
-            
-            <div className="border rounded-md p-4">
-              <h3 className="text-sm font-medium mb-2">Clamp Settings</h3>
+          <TabsContent value="advanced" className="space-y-4 pt-4">
+            <div className="space-y-6">
               <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="clampToLow" 
-                    checked={clampToLow}
-                    onCheckedChange={(checked) => setClampToLow(checked as boolean)}
-                  />
-                  <Label htmlFor="clampToLow">Clamp to span low</Label>
+                <Label htmlFor="scaleType">Scaling Type</Label>
+                <Select value={scaleType} onValueChange={setScaleType}>
+                  <SelectTrigger id="scaleType">
+                    <SelectValue placeholder="Select scaling type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="No Scale">No Scale</SelectItem>
+                    <SelectItem value="Scale 0-100% Input to Span">
+                      Scale 0-100% Input to Span
+                    </SelectItem>
+                    <SelectItem value="Linear Scale, MX+B">
+                      Linear Scale, MX+B
+                    </SelectItem>
+                    <SelectItem value="Scale Defined Input H/L to Span">
+                      Scale Defined Input H/L to Span
+                    </SelectItem>
+                    <SelectItem value="Scale 12-Bit Input to Span">
+                      Scale 12-Bit Input to Span
+                    </SelectItem>
+                    <SelectItem value="Scale 0-100% Square Root Input">
+                      Scale 0-100% Square Root Input
+                    </SelectItem>
+                    <SelectItem value="Square Root of (Input/(F2-F1)) to Span">
+                      Square Root of (Input/(F2-F1)) to Span
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {scaleType === "Linear Scale, MX+B" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="formula">Formula</Label>
+                    <Input
+                      id="formula"
+                      value={formula}
+                      onChange={(e) => setFormula(e.target.value)}
+                      placeholder="Enter formula"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scale">Scale (M)</Label>
+                    <Input
+                      id="scale"
+                      type="number"
+                      value={scale}
+                      onChange={(e) => setScale(Number(e.target.value))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="offset">Offset (B)</Label>
+                    <Input
+                      id="offset"
+                      type="number"
+                      value={offset}
+                      onChange={(e) => setOffset(Number(e.target.value))}
+                    />
+                  </div>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="clampToHigh" 
-                    checked={clampToHigh}
-                    onCheckedChange={(checked) => setClampToHigh(checked as boolean)}
-                  />
-                  <Label htmlFor="clampToHigh">Clamp to span high</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="clampToZero" 
-                    checked={clampToZero}
-                    onCheckedChange={(checked) => setClampToZero(checked as boolean)}
-                  />
-                  <Label htmlFor="clampToZero">Clamp to zero</Label>
+              )}
+
+              <div className="border rounded-md p-4">
+                <h3 className="text-sm font-medium mb-2">Clamp Settings</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="clampToLow"
+                      checked={clampToLow}
+                      onCheckedChange={(checked) =>
+                        setClampToLow(checked as boolean)
+                      }
+                    />
+                    <Label htmlFor="clampToLow">Clamp to span low</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="clampToHigh"
+                      checked={clampToHigh}
+                      onCheckedChange={(checked) =>
+                        setClampToHigh(checked as boolean)
+                      }
+                    />
+                    <Label htmlFor="clampToHigh">Clamp to span high</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="clampToZero"
+                      checked={clampToZero}
+                      onCheckedChange={(checked) =>
+                        setClampToZero(checked as boolean)
+                      }
+                    />
+                    <Label htmlFor="clampToZero">Clamp to zero</Label>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
         )}
 
         {dataType === "Discrete" && (
@@ -844,11 +992,13 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
           </TabsContent>
         )}
       </Tabs>
-      
+
       <DialogFooter className="pt-6">
-        <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Close
+        </Button>
         <Button type="submit">OK</Button>
       </DialogFooter>
     </form>
-  )
+  );
 }

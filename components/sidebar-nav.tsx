@@ -1,127 +1,152 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
-import { ChevronDown, ChevronRight, Gauge, Laptop, Tag, Tags, Cpu, Terminal, Plus } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
-import { useState, useEffect } from "react"
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import {
+  ChevronDown,
+  ChevronRight,
+  Gauge,
+  Laptop,
+  Tag,
+  Tags,
+  Cpu,
+  Terminal,
+  Plus,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useState, useEffect } from "react";
 
 // Type for port data
 interface Port {
-  id: string
-  name: string
-  type: string
-  enabled: boolean
-  devices: Device[]
-  [key: string]: any // Allow additional properties
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+  devices: Device[];
+  [key: string]: any; // Allow additional properties
 }
 
 // Type for device data
 interface Device {
-  id: string
-  name: string
-  type: string
-  enabled: boolean
-  [key: string]: any // Allow additional properties
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+  [key: string]: any; // Allow additional properties
 }
 
 interface NavItem {
-  title: string
-  href: string
-  icon: LucideIcon
-  active?: boolean
-  badge?: string
-  submenu?: NavItem[]
-  dynamicSubmenu?: string
-  isIoTagSection?: boolean
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  active?: boolean;
+  badge?: string;
+  submenu?: NavItem[];
+  dynamicSubmenu?: string;
+  isIoTagSection?: boolean;
 }
 
 interface SidebarNavProps {
-  items: NavItem[]
-  sidebarOpen: boolean
-  ioPorts?: Port[]
+  items: NavItem[];
+  sidebarOpen: boolean;
+  ioPorts?: Port[];
 }
 
-export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const tab = searchParams.get("tab")
-  const section = searchParams.get("section")
-  const portId = searchParams.get("portId")
-  const deviceId = searchParams.get("deviceId")
-  
-  // Track which menus, ports, and devices are open
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
-  const [expandedPorts, setExpandedPorts] = useState<string[]>([])
-  const [expandedDevices, setExpandedDevices] = useState<string[]>([])
+export function SidebarNav({
+  items,
+  sidebarOpen,
+  ioPorts = [],
+}: SidebarNavProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
+  const section = searchParams.get("section");
+  const portId = searchParams.get("portId");
+  const deviceId = searchParams.get("deviceId");
 
-  // Initialize IO Tag menu as open if a port or device is selected
+  // Track which menus, ports, and devices are open
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const [expandedPorts, setExpandedPorts] = useState<string[]>([]);
+  const [expandedDevices, setExpandedDevices] = useState<string[]>([]);
+
   useEffect(() => {
-    if (section === "io-tag") {
+    console.log("Expanded Ports:", expandedPorts);
+    console.log("Expanded Devices:", expandedDevices);
+  }, [expandedPorts, expandedDevices]);
+
+  // Initialize IO Port menu as open if a port or device is selected
+  useEffect(() => {
+    if (section === "io-port") {
       // Open the Data Center menu
-      setOpenMenus(prev => ({
+      setOpenMenus((prev) => ({
         ...prev,
-        "Data Center": true
-      }))
-      
+        "Data Center": true,
+      }));
+
       // If a port is selected, expand it
       if (portId) {
-        const port = ioPorts.find(p => p.id === portId)
+        const port = ioPorts.find((p) => p.id === portId);
         if (port) {
-          setExpandedPorts(prev => 
+          setExpandedPorts((prev) =>
             prev.includes(port.id) ? prev : [...prev, port.id]
-          )
-          
+          );
+
           // If a device is selected, expand it
           if (deviceId) {
-            const device = port.devices?.find(d => d.id === deviceId)
+            const device = port.devices?.find((d) => d.id === deviceId);
             if (device) {
-              setExpandedDevices(prev => 
+              setExpandedDevices((prev) =>
                 prev.includes(device.id) ? prev : [...prev, device.id]
-              )
+              );
             } else {
               // Clear expanded devices if device not found
-              setExpandedDevices([])
+              setExpandedDevices([]);
             }
           } else {
             // Clear expanded devices if no device is selected
-            setExpandedDevices([])
+            setExpandedDevices([]);
           }
         } else {
           // Clear expanded ports and devices if port not found
-          setExpandedPorts([])
-          setExpandedDevices([])
+          setExpandedPorts([]);
+          setExpandedDevices([]);
         }
       } else {
         // Clear expanded ports and devices if no port is selected
-        setExpandedPorts([])
-        setExpandedDevices([])
+        setExpandedPorts([]);
+        setExpandedDevices([]);
       }
     } else {
       // Clear expanded ports and devices when navigating away from IO tag section
-      setExpandedPorts([])
-      setExpandedDevices([])
+      setExpandedPorts([]);
+      setExpandedDevices([]);
     }
-  }, [section, portId, deviceId, ioPorts])
+  }, [section, portId, deviceId, ioPorts]);
 
-  // Toggle submenu visibility
   const toggleSubmenu = (title: string, isIoTag = false) => {
-    // If it's the IO Tag section, we want to automatically scroll to top
     if (isIoTag) {
-      // Find the sidebar element and scroll to top
-      const sidebarElement = document.querySelector('.sidebar-scroll')
+      const sidebarElement = document.querySelector(".sidebar-scroll");
       if (sidebarElement) {
-        sidebarElement.scrollTop = 0
+        sidebarElement.scrollTop = 0;
+      }
+
+      // Always open "Data Center" in io-tag section
+      if (title === "Data Center") {
+        setOpenMenus((prev) => ({
+          ...prev,
+          [title]: true, // force it open
+        }));
+        return;
       }
     }
-    
-    setOpenMenus(prev => ({
+
+    setOpenMenus((prev) => ({
       ...prev,
-      [title]: !prev[title]
-    }))
-  }
+      [title]: !prev[title],
+    }));
+  };
 
   // Toggle port expansion
   const togglePortExpansion = (portId: string, e?: React.MouseEvent) => {
@@ -130,17 +155,17 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     // Always just toggle the expansion state without navigation
-    setExpandedPorts(prev => {
+    setExpandedPorts((prev) => {
       if (prev.includes(portId)) {
-        return prev.filter(id => id !== portId);
+        return prev.filter((id) => id !== portId);
       } else {
         return [...prev, portId];
       }
     });
-  }
-  
+  };
+
   // Toggle device expansion
   const toggleDeviceExpansion = (deviceId: string, e?: React.MouseEvent) => {
     // If event is provided, prevent default and stop propagation
@@ -148,39 +173,44 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     // Always just toggle the expansion state without navigation
-    setExpandedDevices(prev => {
+    setExpandedDevices((prev) => {
       if (prev.includes(deviceId)) {
-        return prev.filter(id => id !== deviceId);
+        return prev.filter((id) => id !== deviceId);
       } else {
         return [...prev, deviceId];
       }
     });
-  }
-  
+  };
+
   // Check if a device is expanded
   const isDeviceExpanded = (device: Device) => {
-    return expandedDevices.includes(device.id) || deviceId === device.id
-  }
+    return expandedDevices.includes(device.id) || deviceId === device.id;
+  };
 
   // Handle clicking on a navigation item
-  const handleItemClick = (href: string, hasSubmenu: boolean, title: string, isIoTagSection = false) => {
+  const handleItemClick = (
+    href: string,
+    hasSubmenu: boolean,
+    title: string,
+    isIoTagSection = false
+  ) => {
     if (hasSubmenu) {
-      toggleSubmenu(title, isIoTagSection)
+      toggleSubmenu(title, isIoTagSection);
     } else if (isIoTagSection) {
       // If it's IO Tag section, we want to show ports and scroll to top
-      toggleSubmenu("Data Center", true)
-      router.push(href)
+      toggleSubmenu("Data Center", true);
+      router.push(href);
     } else {
-      router.push(href)
+      router.push(href);
     }
-  }
+  };
 
   // Check if a port is expanded
   const isPortExpanded = (port: Port) => {
-    return expandedPorts.includes(port.id) || portId === port.id
-  }
+    return expandedPorts.includes(port.id);
+  };
 
   // Render IO tags for a device
   const renderIoTags = (device: Device) => {
@@ -192,7 +222,7 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
         </div>
       );
     }
-    
+
     return tags.map((tag: any) => (
       <li key={tag.id}>
         <div className="flex items-center justify-between rounded-md px-3 py-2 pl-16 text-xs text-muted-foreground">
@@ -211,11 +241,11 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
     return (port.devices || []).map((device: Device) => {
       const hasIoTags = device.tags && device.tags.length > 0;
       const isDeviceOpen = isDeviceExpanded(device);
-      
+
       return (
         <li key={device.id}>
           <div className="flex flex-col">
-            <Link 
+            <Link
               href={`?tab=datacenter&section=io-tag&portId=${port.id}&deviceId=${device.id}`}
               className={`flex items-center justify-between rounded-md px-3 py-2 pl-12 text-sm ${
                 portId === port.id && deviceId === device.id
@@ -227,16 +257,19 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
                 <Cpu className="h-4 w-4" />
                 {device.name}
               </span>
-              
+
               <div className="flex items-center gap-2">
-                {device.enabled ? 
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div> : 
+                {device.enabled ? (
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                ) : (
                   <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                }
-                
+                )}
+
                 {hasIoTags && (
-                  <ChevronDown 
-                    className={`h-4 w-4 transition-transform ${isDeviceOpen ? "rotate-180" : ""}`}
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      isDeviceOpen ? "rotate-180" : ""
+                    }`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -246,18 +279,16 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
                 )}
               </div>
             </Link>
-            
+
             {/* Render IO tags if device is expanded */}
             {isDeviceOpen && hasIoTags && (
-              <ul className="mt-1 space-y-1">
-                {renderIoTags(device)}
-              </ul>
+              <ul className="mt-1 space-y-1">{renderIoTags(device)}</ul>
             )}
           </div>
         </li>
       );
     });
-  }
+  };
 
   // Render the IO ports for the IO Tag section
   const renderIoPorts = () => {
@@ -266,15 +297,15 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
         <div className="px-3 py-2 text-sm text-muted-foreground">
           No communication ports configured
         </div>
-      )
+      );
     }
-    
+
     return (
       <ul className="space-y-1">
-        {ioPorts.map(port => {
-          const hasDevices = port.devices && port.devices.length > 0
-          const isPortOpen = isPortExpanded(port)
-          
+        {ioPorts.map((port) => {
+          const hasDevices = port.devices && port.devices.length > 0;
+          const isPortOpen = isPortExpanded(port);
+
           return (
             <li key={port.id}>
               <div className="flex flex-col">
@@ -282,49 +313,56 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
                   <Link
                     href={`?tab=datacenter&section=io-tag&portId=${port.id}`}
                     className={`flex-1 flex items-center justify-between rounded-md px-3 py-2 pl-8 text-sm hover:bg-accent hover:text-accent-foreground ${
-                      portId === port.id && !deviceId ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                      portId === port.id && !deviceId
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <Terminal className="h-4 w-4" />
                       <span>{port.name}</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
-                      {port.enabled ? 
-                        <div className="h-2 w-2 rounded-full bg-green-500"></div> : 
+                      {port.enabled ? (
+                        <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                      ) : (
                         <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                      }
+                      )}
                     </div>
                   </Link>
-                  
+
                   {/* Separate dropdown button */}
                   {hasDevices && (
                     <button
                       className={`p-2 rounded-md hover:bg-accent hover:text-accent-foreground ${
-                        portId === port.id ? "text-accent-foreground" : "text-muted-foreground"
+                        portId === port.id
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground"
                       }`}
                       onClick={(e) => togglePortExpansion(port.id, e)}
-                      aria-label={isPortOpen ? "Collapse devices" : "Expand devices"}
+                      aria-label={
+                        isPortOpen ? "Collapse devices" : "Expand devices"
+                      }
                     >
-                      <ChevronDown 
-                        className={`h-4 w-4 transition-transform ${isPortOpen ? "rotate-180" : ""}`}
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          isPortOpen ? "rotate-180" : ""
+                        }`}
                       />
                     </button>
                   )}
                 </div>
-              
+
                 {/* Render devices if port is expanded */}
                 {isPortOpen && hasDevices && (
-                  <ul className="mt-1 space-y-1">
-                    {renderDevices(port)}
-                  </ul>
+                  <ul className="mt-1 space-y-1">{renderDevices(port)}</ul>
                 )}
               </div>
             </li>
-          )
+          );
         })}
-        
+
         {/* Add Port button */}
         <li>
           <Link
@@ -336,8 +374,8 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
           </Link>
         </li>
       </ul>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -345,20 +383,23 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
         <nav className="space-y-1">
           <ul className="space-y-1">
             {items.map((item, index) => {
-              const hasSubmenu = item.submenu && item.submenu.length > 0
-              const isOpen = openMenus[item.title] || false
-              const isActive = tab === item.href.split('tab=')[1]?.split('&')[0]
+              const hasSubmenu = item.submenu && item.submenu.length > 0;
+              const isOpen = openMenus[item.title] || false;
+              const isActive =
+                tab === item.href.split("tab=")[1]?.split("&")[0];
 
               return (
                 <li key={index}>
                   <Link
                     href={item.href}
                     onClick={(e) => {
-                      e.preventDefault()
-                      handleItemClick(item.href, hasSubmenu, item.title)
+                      e.preventDefault();
+                      handleItemClick(item.href, hasSubmenu!, item.title);
                     }}
                     className={`flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${
-                      isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -367,7 +408,9 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
                     </div>
                     {hasSubmenu && sidebarOpen && (
                       <ChevronDown
-                        className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                        className={`h-4 w-4 transition-transform ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
                       />
                     )}
                   </Link>
@@ -376,43 +419,52 @@ export function SidebarNav({ items, sidebarOpen, ioPorts = [] }: SidebarNavProps
                   {hasSubmenu && isOpen && sidebarOpen && (
                     <ul className="mt-1 space-y-1">
                       {item.submenu?.map((subItem, subIndex) => {
-                        const isSubActive = section === subItem.href.split('section=')[1]?.split('&')[0]
-                        
+                        const isSubActive =
+                          section ===
+                          subItem.href.split("section=")[1]?.split("&")[0];
+
                         return (
                           <li key={subIndex}>
                             <Link
                               href={subItem.href}
                               onClick={(e) => {
-                                e.preventDefault()
-                                handleItemClick(subItem.href, false, subItem.title, subItem.isIoTagSection)
+                                e.preventDefault();
+                                handleItemClick(
+                                  subItem.href,
+                                  false,
+                                  subItem.title,
+                                  subItem.isIoTagSection
+                                );
                               }}
                               className={`flex items-center justify-between rounded-md px-3 py-2 pl-8 text-sm hover:bg-accent hover:text-accent-foreground ${
-                                isSubActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                                isSubActive
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-muted-foreground"
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                                {subItem.icon && (
+                                  <subItem.icon className="h-4 w-4" />
+                                )}
                                 <span>{subItem.title}</span>
                               </div>
                             </Link>
-                            
+
                             {/* If this is IO Tag section and it's active, render ports */}
                             {subItem.isIoTagSection && isSubActive && (
-                              <div className="mt-2 ml-4">
-                                {renderIoPorts()}
-                              </div>
+                              <div className="mt-2 ml-4">{renderIoPorts()}</div>
                             )}
                           </li>
-                        )
+                        );
                       })}
                     </ul>
                   )}
                 </li>
-              )
+              );
             })}
           </ul>
         </nav>
       </div>
     </div>
-  )
+  );
 }

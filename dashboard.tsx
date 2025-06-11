@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   BarChartIcon as Bar,
   ChevronDown,
@@ -14,29 +14,46 @@ import {
   Settings,
   Shield,
   Wifi,
-} from "lucide-react"
-import Link from "next/link"
+} from "lucide-react";
+import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Types for the navigation items
 type NavItem = {
-  title: string
-  href: string
-  icon: LucideIcon
-  active?: boolean
-  badge?: string
-  submenu?: NavItem[]
-}
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  active?: boolean;
+  badge?: string;
+  submenu?: NavItem[];
+};
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Navigation items
   const navItems: NavItem[] = [
@@ -104,7 +121,7 @@ export default function Dashboard() {
       href: "#",
       icon: Settings,
     },
-  ]
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -118,10 +135,21 @@ export default function Dashboard() {
         <div className="h-16 border-b flex items-center px-4">
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-primary" />
-            {sidebarOpen && <span className="text-xl font-bold">IoT Gateway</span>}
+            {sidebarOpen && (
+              <span className="text-xl font-bold">IoT Gateway</span>
+            )}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="ml-auto">
-            <ChevronDown className={`h-4 w-4 transition-transform ${sidebarOpen ? "rotate-0" : "rotate-180"}`} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="ml-auto"
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${
+                sidebarOpen ? "rotate-0" : "rotate-180"
+              }`}
+            />
           </Button>
         </div>
 
@@ -138,8 +166,12 @@ export default function Dashboard() {
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   } ${!sidebarOpen ? "justify-center" : ""}`}
                 >
-                  <item.icon className={`h-5 w-5 ${!sidebarOpen ? "mx-auto" : ""}`} />
-                  {sidebarOpen && <span className="flex-1 truncate">{item.title}</span>}
+                  <item.icon
+                    className={`h-5 w-5 ${!sidebarOpen ? "mx-auto" : ""}`}
+                  />
+                  {sidebarOpen && (
+                    <span className="flex-1 truncate">{item.title}</span>
+                  )}
                   {item.badge && sidebarOpen && (
                     <Badge variant="outline" className="ml-auto">
                       {item.badge}
@@ -157,7 +189,9 @@ export default function Dashboard() {
                           className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                         >
                           <subitem.icon className="h-4 w-4" />
-                          <span className="flex-1 truncate">{subitem.title}</span>
+                          <span className="flex-1 truncate">
+                            {subitem.title}
+                          </span>
                         </Link>
                       </li>
                     ))}
@@ -222,11 +256,15 @@ export default function Dashboard() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  System Uptime
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">10d 14h 32m</div>
-                <p className="text-xs text-muted-foreground">Last restart: 2023-06-15 08:23:45</p>
+                <p className="text-xs text-muted-foreground">
+                  Last restart: 2023-06-15 08:23:45
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -240,7 +278,9 @@ export default function Dashboard() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Memory Usage
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">512MB / 2GB</div>
@@ -274,7 +314,9 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>System Status</CardTitle>
-                    <CardDescription>Overall status of your IoT Gateway</CardDescription>
+                    <CardDescription>
+                      Overall status of your IoT Gateway
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -282,42 +324,54 @@ export default function Dashboard() {
                         <div className="h-3 w-3 rounded-full bg-green-500" />
                         <div>
                           <div className="font-medium">Network</div>
-                          <div className="text-sm text-muted-foreground">Connected</div>
+                          <div className="text-sm text-muted-foreground">
+                            Connected
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="h-3 w-3 rounded-full bg-green-500" />
                         <div>
                           <div className="font-medium">VPN</div>
-                          <div className="text-sm text-muted-foreground">Connected</div>
+                          <div className="text-sm text-muted-foreground">
+                            Connected
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="h-3 w-3 rounded-full bg-yellow-500" />
                         <div>
                           <div className="font-medium">Modbus</div>
-                          <div className="text-sm text-muted-foreground">Partial</div>
+                          <div className="text-sm text-muted-foreground">
+                            Partial
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="h-3 w-3 rounded-full bg-green-500" />
                         <div>
                           <div className="font-medium">OPC-UA</div>
-                          <div className="text-sm text-muted-foreground">Connected</div>
+                          <div className="text-sm text-muted-foreground">
+                            Connected
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="h-3 w-3 rounded-full bg-red-500" />
                         <div>
                           <div className="font-medium">DNP3.0</div>
-                          <div className="text-sm text-muted-foreground">Disconnected</div>
+                          <div className="text-sm text-muted-foreground">
+                            Disconnected
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="h-3 w-3 rounded-full bg-green-500" />
                         <div>
                           <div className="font-medium">Watchdog</div>
-                          <div className="text-sm text-muted-foreground">Active</div>
+                          <div className="text-sm text-muted-foreground">
+                            Active
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -328,7 +382,9 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Network Interfaces</CardTitle>
-                    <CardDescription>Status of network interfaces and connectivity</CardDescription>
+                    <CardDescription>
+                      Status of network interfaces and connectivity
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -405,7 +461,9 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Protocol Status</CardTitle>
-                    <CardDescription>Status of configured industrial protocols</CardDescription>
+                    <CardDescription>
+                      Status of configured industrial protocols
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -465,36 +523,58 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Network Configuration</CardTitle>
-                    <CardDescription>Manage network interfaces, routing, and DHCP</CardDescription>
+                    <CardDescription>
+                      Manage network interfaces, routing, and DHCP
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <p>
-                        Configure network interfaces and related services in this section. The gateway supports DHCP
-                        (client and server), static routes, traffic routing, port forwarding, NAT, and dynamic DNS.
+                        Configure network interfaces and related services in
+                        this section. The gateway supports DHCP (client and
+                        server), static routes, traffic routing, port
+                        forwarding, NAT, and dynamic DNS.
                       </p>
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Network className="h-6 w-6" />
                           <span>Ethernet Interfaces</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>DHCP Server</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <RefreshCw className="h-6 w-6" />
                           <span>Static Routes</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Network className="h-6 w-6" />
                           <span>Port Forwarding</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>Dynamic DNS</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Wifi className="h-6 w-6" />
                           <span>WiFi Settings</span>
                         </Button>
@@ -508,36 +588,58 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Security Configuration</CardTitle>
-                    <CardDescription>Manage VPN, firewall, and security settings</CardDescription>
+                    <CardDescription>
+                      Manage VPN, firewall, and security settings
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <p>
-                        Configure security features including IPSec VPN (IKEv1, IKEv2), zone-based firewall, and
-                        source/destination IP binding. Ensure secure communication and protect your IoT devices.
+                        Configure security features including IPSec VPN (IKEv1,
+                        IKEv2), zone-based firewall, and source/destination IP
+                        binding. Ensure secure communication and protect your
+                        IoT devices.
                       </p>
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Shield className="h-6 w-6" />
                           <span>IPSec VPN</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Shield className="h-6 w-6" />
                           <span>Zone-Based Firewall</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>IP Binding</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Shield className="h-6 w-6" />
                           <span>Encryption Settings</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Shield className="h-6 w-6" />
                           <span>Certificate Management</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Shield className="h-6 w-6" />
                           <span>Security Audit</span>
                         </Button>
@@ -551,36 +653,57 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Industrial Protocols</CardTitle>
-                    <CardDescription>Manage industrial communication protocols</CardDescription>
+                    <CardDescription>
+                      Manage industrial communication protocols
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <p>
-                        Configure industrial protocols including DNP3.0, OPC-UA, IEC protocols, and Modbus RTU/TCP. Set
-                        up both client and server modes for flexible system integration.
+                        Configure industrial protocols including DNP3.0, OPC-UA,
+                        IEC protocols, and Modbus RTU/TCP. Set up both client
+                        and server modes for flexible system integration.
                       </p>
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>DNP3.0</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>OPC-UA</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>Modbus RTU/TCP</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>IEC Protocols</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>Protocol Conversion</span>
                         </Button>
-                        <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2"
+                        >
                           <Database className="h-6 w-6" />
                           <span>Data Mapping</span>
                         </Button>
@@ -594,7 +717,9 @@ export default function Dashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>System Logs</CardTitle>
-                    <CardDescription>View system logs and events</CardDescription>
+                    <CardDescription>
+                      View system logs and events
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -608,74 +733,131 @@ export default function Dashboard() {
                       <div className="bg-muted p-4 rounded-md h-[400px] overflow-y-auto text-sm">
                         <div className="space-y-2">
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:23:45]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> System started
-                            successfully
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:23:45]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            System started successfully
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:23:46]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> Interface eth0 up
-                            with IP 192.168.1.100
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:23:46]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            Interface eth0 up with IP 192.168.1.100
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:23:47]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> Interface eth1 up
-                            with IP 10.0.0.1
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:23:47]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            Interface eth1 up with IP 10.0.0.1
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:23:48]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> DHCP server
-                            started on eth1
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:23:48]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            DHCP server started on eth1
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:23:50]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> IPsec service
-                            started
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:23:50]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            IPsec service started
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:24:01]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> IPsec tunnel
-                            established with peer vpn.example.com
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:24:01]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            IPsec tunnel established with peer vpn.example.com
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:24:15]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> Modbus TCP server
-                            started on port 502
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:24:15]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            Modbus TCP server started on port 502
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:24:30]</span>{" "}
-                            <span className="bg-yellow-500/10 text-yellow-700 px-1 rounded">WARN</span> Failed to
-                            connect to Modbus RTU device on COM1
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:24:30]
+                            </span>{" "}
+                            <span className="bg-yellow-500/10 text-yellow-700 px-1 rounded">
+                              WARN
+                            </span>{" "}
+                            Failed to connect to Modbus RTU device on COM1
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:25:00]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> OPC-UA server
-                            started on port 4840
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:25:00]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            OPC-UA server started on port 4840
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:25:45]</span>{" "}
-                            <span className="bg-red-500/10 text-red-700 px-1 rounded">ERROR</span> DNP3.0 server failed
-                            to start: configuration error
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:25:45]
+                            </span>{" "}
+                            <span className="bg-red-500/10 text-red-700 px-1 rounded">
+                              ERROR
+                            </span>{" "}
+                            DNP3.0 server failed to start: configuration error
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:26:10]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> Client connected
-                            to Modbus TCP server (10.0.0.5)
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:26:10]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            Client connected to Modbus TCP server (10.0.0.5)
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:27:23]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> Watchdog service
-                            started with timeout 30s
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:27:23]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            Watchdog service started with timeout 30s
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:30:12]</span>{" "}
-                            <span className="bg-yellow-500/10 text-yellow-700 px-1 rounded">WARN</span> High CPU usage
-                            detected: 78%
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:30:12]
+                            </span>{" "}
+                            <span className="bg-yellow-500/10 text-yellow-700 px-1 rounded">
+                              WARN
+                            </span>{" "}
+                            High CPU usage detected: 78%
                           </div>
                           <div>
-                            <span className="text-muted-foreground">[2023-06-15 14:32:45]</span>{" "}
-                            <span className="bg-green-500/10 text-green-700 px-1 rounded">INFO</span> DDNS update
-                            successful for hostname iot-gateway.example.com
+                            <span className="text-muted-foreground">
+                              [2023-06-15 14:32:45]
+                            </span>{" "}
+                            <span className="bg-green-500/10 text-green-700 px-1 rounded">
+                              INFO
+                            </span>{" "}
+                            DDNS update successful for hostname
+                            iot-gateway.example.com
                           </div>
                         </div>
                       </div>
@@ -694,6 +876,5 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-

@@ -1,74 +1,100 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/components/ui/use-toast"
-import { useConfigStore } from '@/lib/stores/configuration-store'
-import type { IOPortConfig } from './io-tag-form'; // Assuming IOPortConfig is exported from there
-import type { IOTag } from './io-tag-detail'; // Import the definitive IOTag interface
-import { AlertCircle } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
+import { useConfigStore } from "@/lib/stores/configuration-store";
+import type { IOPortConfig } from "./io-tag-form"; // Assuming IOPortConfig is exported from there
+import type { IOTag } from "./io-tag-detail"; // Import the definitive IOTag interface
+import { AlertCircle } from "lucide-react";
 
 export interface DeviceConfig {
-  id: string
-  enabled: boolean
-  name: string
-  deviceType: string
-  unitNumber: number
-  tagWriteType: string
-  description: string
-  addDeviceNameAsPrefix: boolean
-  useAsciiProtocol: number
-  packetDelay: number
-  digitalBlockSize: number
+  id: string;
+  enabled: boolean;
+  name: string;
+  deviceType: string;
+  unitNumber: number;
+  tagWriteType: string;
+  description: string;
+  addDeviceNameAsPrefix: boolean;
+  useAsciiProtocol: number;
+  packetDelay: number;
+  digitalBlockSize: number;
   analogBlockSize: number;
   tags: IOTag[]; // Array to hold device tags
 }
 
 interface DeviceFormProps {
-  onSubmit?: (config: DeviceConfig) => void
-  existingConfig?: DeviceConfig
-  portId: string
+  onSubmit?: (config: DeviceConfig) => void;
+  existingConfig?: DeviceConfig;
+  portId: string;
 }
 
-export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps) {
+export function DeviceForm({
+  onSubmit,
+  existingConfig,
+  portId,
+}: DeviceFormProps) {
   const { updateConfig, getConfig } = useConfigStore();
-  const [enabled, setEnabled] = useState(existingConfig?.enabled ?? true)
-  const [name, setName] = useState(existingConfig?.name || "NewDevice")
-  const [nameError, setNameError] = useState(true) // Start with error for default name
-  const [deviceType, setDeviceType] = useState(existingConfig?.deviceType || "Modbus RTU")
-  const [unitNumber, setUnitNumber] = useState(existingConfig?.unitNumber || 1)
-  const [tagWriteType, setTagWriteType] = useState(existingConfig?.tagWriteType || "Single Write")
-  const [description, setDescription] = useState(existingConfig?.description || "")
-  const [addDeviceNameAsPrefix, setAddDeviceNameAsPrefix] = useState(existingConfig?.addDeviceNameAsPrefix ?? true)
-  
+  const [enabled, setEnabled] = useState(existingConfig?.enabled ?? true);
+  const [name, setName] = useState(existingConfig?.name || "NewDevice");
+  const [nameError, setNameError] = useState(true); // Start with error for default name
+  const [deviceType, setDeviceType] = useState(
+    existingConfig?.deviceType || "Modbus RTU"
+  );
+  const [unitNumber, setUnitNumber] = useState(existingConfig?.unitNumber || 1);
+  const [tagWriteType, setTagWriteType] = useState(
+    existingConfig?.tagWriteType || "Single Write"
+  );
+  const [description, setDescription] = useState(
+    existingConfig?.description || ""
+  );
+  const [addDeviceNameAsPrefix, setAddDeviceNameAsPrefix] = useState(
+    existingConfig?.addDeviceNameAsPrefix ?? true
+  );
+
   // Extension properties
-  const [useAsciiProtocol, setUseAsciiProtocol] = useState(existingConfig?.useAsciiProtocol || 0)
-  const [packetDelay, setPacketDelay] = useState(existingConfig?.packetDelay || 20)
-  const [digitalBlockSize, setDigitalBlockSize] = useState(existingConfig?.digitalBlockSize || 512)
-  const [analogBlockSize, setAnalogBlockSize] = useState(existingConfig?.analogBlockSize || 64)
+  const [useAsciiProtocol, setUseAsciiProtocol] = useState(
+    existingConfig?.useAsciiProtocol || 0
+  );
+  const [packetDelay, setPacketDelay] = useState(
+    existingConfig?.packetDelay || 20
+  );
+  const [digitalBlockSize, setDigitalBlockSize] = useState(
+    existingConfig?.digitalBlockSize || 512
+  );
+  const [analogBlockSize, setAnalogBlockSize] = useState(
+    existingConfig?.analogBlockSize || 64
+  );
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value
-    setName(newName)
-    setNameError(newName === "NewDevice" || newName.trim() === "")
-  }
+    const newName = e.target.value;
+    setName(newName);
+    setNameError(newName === "NewDevice" || newName.trim() === "");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (nameError) {
       toast({
         title: "Validation Error",
         description: "Please provide a valid device name",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     const newDeviceConfig: DeviceConfig = {
@@ -84,14 +110,14 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
       packetDelay,
       digitalBlockSize,
       analogBlockSize,
-      tags: existingConfig?.tags || [] // Initialize tags array
+      tags: existingConfig?.tags || [], // Initialize tags array
     };
 
     // Update the global configuration store
     const currentGlobalConfig = getConfig();
     const allPorts: IOPortConfig[] = currentGlobalConfig.io_setup?.ports || [];
-    
-    const targetPortIndex = allPorts.findIndex(p => p.id === portId);
+
+    const targetPortIndex = allPorts.findIndex((p) => p.id === portId);
 
     if (targetPortIndex === -1) {
       toast({
@@ -107,7 +133,9 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
 
     if (existingConfig) {
       // Editing an existing device
-      updatedDevices = targetPort.devices.map(d => d.id === newDeviceConfig.id ? newDeviceConfig : d);
+      updatedDevices = targetPort.devices.map((d) =>
+        d.id === newDeviceConfig.id ? newDeviceConfig : d
+      );
     } else {
       // Adding a new device
       updatedDevices = [...(targetPort.devices || []), newDeviceConfig];
@@ -117,7 +145,7 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
     const updatedAllPorts = [...allPorts];
     updatedAllPorts[targetPortIndex] = targetPort;
 
-    updateConfig(['io_setup', 'ports'], updatedAllPorts);
+    updateConfig(["io_setup", "ports"], updatedAllPorts);
 
     // Call the local onSubmit if provided
     if (onSubmit) {
@@ -127,30 +155,32 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
     toast({
       title: "Device Configuration Saved",
       description: `Successfully saved configuration for ${name}`,
-    })
-  }
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{existingConfig ? "Edit Device" : "Add New Device"}</CardTitle>
+        <CardTitle>
+          {existingConfig ? "Edit Device" : "Add New Device"}
+        </CardTitle>
       </CardHeader>
       <CardContent className="max-h-[70vh] overflow-y-auto pr-1">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="border rounded-md p-4">
               <h3 className="text-md font-medium mb-4">General Information</h3>
-              
+
               {/* Enable option */}
               <div className="flex items-center space-x-2 mb-4">
-                <Checkbox 
-                  id="enabled" 
-                  checked={enabled} 
-                  onCheckedChange={(checked) => setEnabled(checked as boolean)} 
+                <Checkbox
+                  id="enabled"
+                  checked={enabled}
+                  onCheckedChange={(checked) => setEnabled(checked as boolean)}
                 />
                 <Label htmlFor="enabled">Enable</Label>
               </div>
-              
+
               {/* Name with validation indicator */}
               <div className="space-y-2 mb-4">
                 <Label htmlFor="name" className="flex items-center">
@@ -168,10 +198,12 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                   className={nameError ? "border-destructive" : ""}
                 />
                 {nameError && (
-                  <p className="text-xs text-destructive">Please enter a unique device name</p>
+                  <p className="text-xs text-destructive">
+                    Please enter a unique device name
+                  </p>
                 )}
               </div>
-              
+
               {/* Device Type dropdown */}
               <div className="space-y-2 mb-4">
                 <Label htmlFor="deviceType">Device Type</Label>
@@ -181,29 +213,56 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Modbus RTU">Modbus RTU</SelectItem>
-                    <SelectItem value="Advantech ADAM 2000 Series (Modbus RTU)">Advantech ADAM 2000 Series (Modbus RTU)</SelectItem>
-                    <SelectItem value="Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)">Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)</SelectItem>
-                    <SelectItem value="Advantech WebCon 2000 Series">Advantech WebCon 2000 Series</SelectItem>
-                    <SelectItem value="Advantech WebOP HMI (Modbus RTU)">Advantech WebOP HMI (Modbus RTU)</SelectItem>
-                    <SelectItem value="Delta DVP Series PLC (Modbus RTU)">Delta DVP Series PLC (Modbus RTU)</SelectItem>
-                    <SelectItem value="M System, Modbus Compatible, RX Series (Modbus RTU)">M System, Modbus Compatible, RX Series (Modbus RTU)</SelectItem>
-                    <SelectItem value="Schneider ION6200 (Modbus RTU)">Schneider ION6200 (Modbus RTU)</SelectItem>
-                    <SelectItem value="WAGO I/O System 750">WAGO I/O System 750</SelectItem>
-                    <SelectItem value="YASKAWA MP900 series, MemoBus Modbus compatible (Modbus RTU)">YASKAWA MP900 series, MemoBus Modbus compatible (Modbus RTU)</SelectItem>
+                    <SelectItem value="Advantech ADAM 2000 Series (Modbus RTU)">
+                      Advantech ADAM 2000 Series (Modbus RTU)
+                    </SelectItem>
+                    <SelectItem value="Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)">
+                      Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)
+                    </SelectItem>
+                    <SelectItem value="Advantech WebCon 2000 Series">
+                      Advantech WebCon 2000 Series
+                    </SelectItem>
+                    <SelectItem value="Advantech WebOP HMI (Modbus RTU)">
+                      Advantech WebOP HMI (Modbus RTU)
+                    </SelectItem>
+                    <SelectItem value="Delta DVP Series PLC (Modbus RTU)">
+                      Delta DVP Series PLC (Modbus RTU)
+                    </SelectItem>
+                    <SelectItem value="M System, Modbus Compatible, RX Series (Modbus RTU)">
+                      M System, Modbus Compatible, RX Series (Modbus RTU)
+                    </SelectItem>
+                    <SelectItem value="Schneider ION6200 (Modbus RTU)">
+                      Schneider ION6200 (Modbus RTU)
+                    </SelectItem>
+                    <SelectItem value="WAGO I/O System 750">
+                      WAGO I/O System 750
+                    </SelectItem>
+                    <SelectItem value="YASKAWA MP900 series, MemoBus Modbus compatible (Modbus RTU)">
+                      YASKAWA MP900 series, MemoBus Modbus compatible (Modbus
+                      RTU)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Device Model */}
               <div className="flex items-center space-x-2 mb-4">
                 <Checkbox id="deviceModel" disabled />
-                <Label htmlFor="deviceModel" className="flex-1">Device Model</Label>
-                <Button variant="outline" disabled className="text-muted-foreground">
+                <Label htmlFor="deviceModel" className="flex-1">
+                  Device Model
+                </Label>
+                <Button
+                  variant="outline"
+                  disabled
+                  className="text-muted-foreground"
+                >
                   Double Click to Select Device Template
                 </Button>
-                <Button variant="outline" size="icon" disabled>...</Button>
+                <Button variant="outline" size="icon" disabled>
+                  ...
+                </Button>
               </div>
-              
+
               {/* Unit Number */}
               <div className="space-y-2 mb-4">
                 <Label htmlFor="unitNumber">Unit Number</Label>
@@ -212,10 +271,10 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                   type="number"
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(Number(e.target.value))}
-                  min={0}
+                  min={1}
                 />
               </div>
-              
+
               {/* Tag Write Type dropdown */}
               <div className="space-y-2 mb-4">
                 <Label htmlFor="tagWriteType">Tag Write Type</Label>
@@ -229,7 +288,7 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Description */}
               <div className="space-y-2 mb-4">
                 <Label htmlFor="description">Description</Label>
@@ -241,25 +300,31 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                   rows={3}
                 />
               </div>
-              
+
               {/* Add device name as prefix to IO tags */}
               <div className="flex items-center space-x-2 mb-4">
-                <Checkbox 
-                  id="addDeviceNameAsPrefix" 
-                  checked={addDeviceNameAsPrefix} 
-                  onCheckedChange={(checked) => setAddDeviceNameAsPrefix(checked as boolean)} 
+                <Checkbox
+                  id="addDeviceNameAsPrefix"
+                  checked={addDeviceNameAsPrefix}
+                  onCheckedChange={(checked) =>
+                    setAddDeviceNameAsPrefix(checked as boolean)
+                  }
                 />
-                <Label htmlFor="addDeviceNameAsPrefix">Add device name as prefix to IO tags</Label>
+                <Label htmlFor="addDeviceNameAsPrefix">
+                  Add device name as prefix to IO tags
+                </Label>
               </div>
-              
+
               {/* Bulk Copy button */}
-              <Button type="button" variant="outline" className="mt-2">Bulk Copy</Button>
+              <Button type="button" variant="outline" className="mt-2">
+                Bulk Copy
+              </Button>
             </div>
-            
+
             {/* Extension Properties */}
             <div className="border rounded-md p-4">
               <h3 className="text-md font-medium mb-4">Extension Properties</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Use ASCII Protocol */}
                 <div className="space-y-2">
@@ -268,11 +333,13 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                     id="useAsciiProtocol"
                     type="number"
                     value={useAsciiProtocol}
-                    onChange={(e) => setUseAsciiProtocol(Number(e.target.value))}
+                    onChange={(e) =>
+                      setUseAsciiProtocol(Number(e.target.value))
+                    }
                     min={0}
                   />
                 </div>
-                
+
                 {/* Packet Delay */}
                 <div className="space-y-2">
                   <Label htmlFor="packetDelay">Packet Delay (ms)</Label>
@@ -284,7 +351,7 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                     min={0}
                   />
                 </div>
-                
+
                 {/* Digital block size */}
                 <div className="space-y-2">
                   <Label htmlFor="digitalBlockSize">Digital block size</Label>
@@ -292,11 +359,13 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
                     id="digitalBlockSize"
                     type="number"
                     value={digitalBlockSize}
-                    onChange={(e) => setDigitalBlockSize(Number(e.target.value))}
+                    onChange={(e) =>
+                      setDigitalBlockSize(Number(e.target.value))
+                    }
                     min={0}
                   />
                 </div>
-                
+
                 {/* Analog block size */}
                 <div className="space-y-2">
                   <Label htmlFor="analogBlockSize">Analog block size</Label>
@@ -311,14 +380,18 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
               </div>
             </div>
           </div>
-          
+
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => {
-              // Reset or cancel form
-              if (onSubmit && existingConfig) {
-                onSubmit(existingConfig);
-              }
-            }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                // Reset or cancel form
+                if (onSubmit && existingConfig) {
+                  onSubmit(existingConfig);
+                }
+              }}
+            >
               {existingConfig ? "Discard Changes" : "Cancel"}
             </Button>
             <Button type="submit">
@@ -328,5 +401,5 @@ export function DeviceForm({ onSubmit, existingConfig, portId }: DeviceFormProps
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
