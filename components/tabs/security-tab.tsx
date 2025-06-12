@@ -1,35 +1,43 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Database, Shield } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { IPSecVPNForm } from "@/components/forms/ipsec-vpn-form"
-import { FirewallForm } from "@/components/forms/firewall-form"
-import { IPBindingForm } from "@/components/forms/ip-binding-form"
-import { EncryptionSettingsForm } from "@/components/forms/encryption-settings-form"
-import { CertificateManagementForm } from "@/components/forms/certificate-management-form"
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Database, Shield } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IPSecVPNForm } from "@/components/forms/ipsec-vpn-form";
+import { FirewallForm } from "@/components/forms/firewall-form";
+import { IPBindingForm } from "@/components/forms/ip-binding-form";
+import { EncryptionSettingsForm } from "@/components/forms/encryption-settings-form";
+import { CertificateManagementForm } from "@/components/forms/certificate-management-form";
 
 export default function SecurityTab() {
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   const [activeSecurityTab, setActiveSecurityTab] = useState(() => {
-    return searchParams.get("section") || "vpn"
-  })
+    return searchParams.get("section") || "vpn";
+  });
 
   // Update active tab when section changes in URL
   useEffect(() => {
-    const section = searchParams.get("section")
+    const section = searchParams.get("section");
     if (section) {
-      setActiveSecurityTab(section)
+      setActiveSecurityTab(section);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Security Configuration</CardTitle>
-        <CardDescription>Manage VPN, firewall, and security settings</CardDescription>
+        <CardDescription>
+          Manage VPN, firewall, and security settings
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeSecurityTab} onValueChange={setActiveSecurityTab}>
@@ -43,6 +51,7 @@ export default function SecurityTab() {
 
           <TabsContent value="vpn">
             <IPSecVPNForm />
+            {/* <div className="h-[2000px] bg-red-100">Test</div> */}
           </TabsContent>
 
           <TabsContent value="firewall">
@@ -63,6 +72,5 @@ export default function SecurityTab() {
         </Tabs>
       </CardContent>
     </Card>
-  )
+  );
 }
-

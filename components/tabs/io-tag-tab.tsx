@@ -676,7 +676,15 @@ export default function IOTagManagement({
               {selectedDevice ? (
                 <div className="border rounded-lg p-4">
                   <IOTagDetailView
-                    device={selectedDevice.device}
+                    device={{
+                      ...selectedDevice.device,
+                      addDeviceNameAsPrefix:
+                        selectedDevice.device.addDeviceNameAsPrefix ?? false,
+                      useAsciiProtocol: Number(
+                        selectedDevice.device.useAsciiProtocol
+                      ),
+                      tags: selectedDevice.device.tags ?? [], // ✅ Ensure it's always an array
+                    }}
                     portId={selectedDevice.portId}
                     onUpdate={handleUpdateTags}
                   />

@@ -93,3 +93,13 @@
   }
 }
 
+/* Add these to your global CSS or inline via Tailwind */
+.debug-page {
+  border: 3px solid red !important;
+}
+.debug-card {
+  border: 3px dashed blue !important;
+}
+.debug-tabarea {
+  border: 3px dotted green !important;
+}

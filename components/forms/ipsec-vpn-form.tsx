@@ -1,26 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 
 export function IPSecVPNForm() {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     toast({
       title: "Settings saved",
       description: "IPSec VPN settings have been updated.",
-    })
-  }
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -34,7 +47,9 @@ export function IPSecVPNForm() {
           <Card>
             <CardHeader>
               <CardTitle>Site-to-Site VPN</CardTitle>
-              <CardDescription>Configure IPSec site-to-site VPN tunnel</CardDescription>
+              <CardDescription>
+                Configure IPSec site-to-site VPN tunnel
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -60,7 +75,11 @@ export function IPSecVPNForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="pre-shared-key">Pre-shared Key</Label>
-                <Input id="pre-shared-key" type="password" placeholder="••••••••" />
+                <Input
+                  id="pre-shared-key"
+                  type="password"
+                  placeholder="••••••••"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,23 +118,28 @@ export function IPSecVPNForm() {
         </TabsContent>
 
         <TabsContent value="client">
-          <Card>
-            <CardHeader>
-              <CardTitle>Client VPN</CardTitle>
-              <CardDescription>Configure IPSec client VPN access</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between mb-4">
-                <Label htmlFor="client-vpn-enabled">Enable Client VPN</Label>
-                <Switch id="client-vpn-enabled" />
-              </div>
+          <div className="max-h-[70vh] overflow-y-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Client VPN</CardTitle>
+                <CardDescription>
+                  Configure IPSec client VPN access
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-4">
+                  <Label htmlFor="client-vpn-enabled">Enable Client VPN</Label>
+                  <Switch id="client-vpn-enabled" />
+                </div>
 
-              <p className="text-muted-foreground">Client VPN settings will be available when enabled.</p>
-            </CardContent>
-          </Card>
+                <p className="text-muted-foreground">
+                  Client VPN settings will be available when enabled.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </form>
-  )
+  );
 }
-
