@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,22 +13,45 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronRight, ChevronDown, Server, Cpu, Tag, UserCircle, FileDigit, BarChart, Cog } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChevronRight,
+  ChevronDown,
+  Server,
+  Cpu,
+  Tag,
+  UserCircle,
+  FileDigit,
+  BarChart,
+  Cog,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // Define the form schema
 const calculationTagSchema = z.object({
@@ -50,12 +73,13 @@ const calculationTagSchema = z.object({
   spanLow: z.coerce.number().int().min(0).default(0),
   isParent: z.boolean().default(false),
   description: z.string().optional().default(""),
-})
+});
 
 // Define the form props
 interface CalculationTagFormProps {
-  onSubmit: (values: z.infer<typeof calculationTagSchema>) => void
-  initialValues?: z.infer<typeof calculationTagSchema>
+  onSubmit: (values: z.infer<typeof calculationTagSchema>) => void;
+  onCancel: () => void;
+  initialValues?: z.infer<typeof calculationTagSchema>;
 }
 
 // Define interfaces for IO structure
@@ -83,81 +107,85 @@ interface Port {
   devices: Device[];
 }
 
-export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFormProps) {
+export function CalculationTagForm({
+  onSubmit,
+  onCancel,
+  initialValues,
+}: CalculationTagFormProps) {
   // Initialize ioPorts as an empty array
   const [ioPorts, setIoPorts] = useState<Port[]>([]);
-  
+
   // State for expanded items in tree
   const [expandedPorts, setExpandedPorts] = useState<string[]>([]);
   const [expandedDevices, setExpandedDevices] = useState<string[]>([]);
-  
+
   // State for tag selection dialog
   const [tagSelectionDialog, setTagSelectionDialog] = useState({
     isOpen: false,
-    targetVariable: ""
+    targetVariable: "",
   });
   const [activeTab, setActiveTab] = useState("basic");
-  
+
   // Load IO ports data from localStorage
   useEffect(() => {
     const fetchIoPorts = async () => {
       try {
-        const storedPorts = localStorage.getItem('io_ports_data')
+        const storedPorts = localStorage.getItem("io_ports_data");
         if (storedPorts) {
-          setIoPorts(JSON.parse(storedPorts))
+          setIoPorts(JSON.parse(storedPorts));
         }
-        
+
         const handleIoPortsUpdate = (event: StorageEvent) => {
-          if (event.key === 'io_ports_data') {
+          if (event.key === "io_ports_data") {
             try {
-              const updatedPorts = JSON.parse(event.newValue || '[]')
+              const updatedPorts = JSON.parse(event.newValue || "[]");
               if (updatedPorts) {
-                setIoPorts(updatedPorts)
+                setIoPorts(updatedPorts);
               }
             } catch (error) {
-              console.error('Error parsing updated IO ports data:', error)
+              console.error("Error parsing updated IO ports data:", error);
             }
           }
-        }
-        
-        window.addEventListener('storage', handleIoPortsUpdate)
-        
+        };
+
+        window.addEventListener("storage", handleIoPortsUpdate);
+
         return () => {
-          window.removeEventListener('storage', handleIoPortsUpdate)
-        }
+          window.removeEventListener("storage", handleIoPortsUpdate);
+        };
       } catch (error) {
-        console.error('Error fetching IO ports data:', error)
+        console.error("Error fetching IO ports data:", error);
       }
-    }
-    
-    fetchIoPorts()
+    };
+
+    fetchIoPorts();
   }, []);
-  
+
   // Toggle expansion of a port in the tree
   const togglePortExpansion = (portId: string) => {
-    setExpandedPorts(prev => {
+    setExpandedPorts((prev) => {
       if (prev.includes(portId)) {
-        return prev.filter(id => id !== portId);
+        return prev.filter((id) => id !== portId);
       } else {
         return [...prev, portId];
       }
     });
-  }
-  
+  };
+
   // Toggle expansion of a device in the tree
   const toggleDeviceExpansion = (deviceId: string) => {
-    setExpandedDevices(prev => {
+    setExpandedDevices((prev) => {
       if (prev.includes(deviceId)) {
-        return prev.filter(id => id !== deviceId);
+        return prev.filter((id) => id !== deviceId);
       } else {
         return [...prev, deviceId];
       }
     });
-  }
-  
+  };
+
   // Define the type for the form values
   type FormValues = z.infer<typeof calculationTagSchema>;
-  
+
   // Initialize the form with default values or provided initial values
   const form = useForm<FormValues>({
     resolver: zodResolver(calculationTagSchema),
@@ -180,28 +208,36 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
       spanLow: 0,
       isParent: false,
     },
-  })
+  });
 
   // Handle form submission
   function handleSubmit(values: z.infer<typeof calculationTagSchema>) {
-    onSubmit(values)
+    onSubmit(values);
   }
 
   return (
     <div className="border rounded-md p-0">
-      <div className="text-lg font-semibold p-4 bg-muted/30 border-b">New Tag</div>
+      <div className="text-lg font-semibold p-4 bg-muted/30 border-b">
+        New Tag
+      </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <Tabs defaultValue="basic" className="w-full">
             <div className="border-b px-4">
               <TabsList className="bg-transparent h-12">
-                <TabsTrigger value="basic" className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                <TabsTrigger
+                  value="basic"
+                  className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded-sm"></div>
                     Basic
                   </div>
                 </TabsTrigger>
-                <TabsTrigger value="advanced" className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                <TabsTrigger
+                  value="advanced"
+                  className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                >
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
                     Advanced
@@ -209,7 +245,7 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                 </TabsTrigger>
               </TabsList>
             </div>
-            
+
             <div className="p-4">
               <TabsContent value="basic" className="mt-0">
                 <div className="space-y-4">
@@ -228,7 +264,7 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
                     <FormLabel className="text-right">Default Value:</FormLabel>
                     <FormField
@@ -237,14 +273,19 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input type="number" step="0.1" placeholder="0.0" {...field} />
+                            <Input
+                              type="number"
+                              step="0.1"
+                              placeholder="0.0"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
                     <FormLabel className="text-right">Period(s):</FormLabel>
                     <FormField
@@ -253,14 +294,19 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input type="number" min="1" placeholder="1" {...field} />
+                            <Input
+                              type="number"
+                              min="1"
+                              placeholder="1"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
                     <FormLabel className="text-right">Span High:</FormLabel>
                     <FormField
@@ -269,14 +315,19 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input type="number" min="0" placeholder="1000" {...field} />
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="1000"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
                     <FormLabel className="text-right">Span Low:</FormLabel>
                     <FormField
@@ -285,25 +336,32 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input type="number" min="0" placeholder="0" {...field} />
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-[120px_1fr] items-start gap-4">
-                    <FormLabel className="text-right pt-2">Description:</FormLabel>
+                    <FormLabel className="text-right pt-2">
+                      Description:
+                    </FormLabel>
                     <FormField
                       control={form.control}
                       name="description"
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Textarea 
-                              placeholder="Enter description" 
-                              className="min-h-[100px] resize-none" 
+                            <Textarea
+                              placeholder="Enter description"
+                              className="min-h-[100px] resize-none"
                               value={field.value || ""}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
@@ -318,18 +376,45 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="advanced" className="mt-0">
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-2">
-                    <Select value="" onValueChange={(value) => {
-                      if (value === "+") form.setValue("formula", form.getValues("formula") + "+");
-                      if (value === "-") form.setValue("formula", form.getValues("formula") + "-");
-                      if (value === "*") form.setValue("formula", form.getValues("formula") + "*");
-                      if (value === "/") form.setValue("formula", form.getValues("formula") + "/");
-                      if (value === "%") form.setValue("formula", form.getValues("formula") + "%");
-                      if (value === "^") form.setValue("formula", form.getValues("formula") + "^");
-                    }}>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        if (value === "+")
+                          form.setValue(
+                            "formula",
+                            form.getValues("formula") + "+"
+                          );
+                        if (value === "-")
+                          form.setValue(
+                            "formula",
+                            form.getValues("formula") + "-"
+                          );
+                        if (value === "*")
+                          form.setValue(
+                            "formula",
+                            form.getValues("formula") + "*"
+                          );
+                        if (value === "/")
+                          form.setValue(
+                            "formula",
+                            form.getValues("formula") + "/"
+                          );
+                        if (value === "%")
+                          form.setValue(
+                            "formula",
+                            form.getValues("formula") + "%"
+                          );
+                        if (value === "^")
+                          form.setValue(
+                            "formula",
+                            form.getValues("formula") + "^"
+                          );
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Mathematical" />
                       </SelectTrigger>
@@ -342,10 +427,16 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                         <SelectItem value="^">^</SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Select value="" onValueChange={(value) => {
-                      form.setValue("formula", form.getValues("formula") + value);
-                    }}>
+
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        form.setValue(
+                          "formula",
+                          form.getValues("formula") + value
+                        );
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Functions" />
                       </SelectTrigger>
@@ -365,14 +456,24 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                         <SelectItem value="logn( , )">logn( , )</SelectItem>
                         <SelectItem value="root( , )">root( , )</SelectItem>
                         <SelectItem value="sqrt()">sqrt()</SelectItem>
-                        <SelectItem value="clamp( , , )">clamp( , , )</SelectItem>
-                        <SelectItem value="inrange( , , )">inrange( , , )</SelectItem>
+                        <SelectItem value="clamp( , , )">
+                          clamp( , , )
+                        </SelectItem>
+                        <SelectItem value="inrange( , , )">
+                          inrange( , , )
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Select value="" onValueChange={(value) => {
-                      form.setValue("formula", form.getValues("formula") + value);
-                    }}>
+
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        form.setValue(
+                          "formula",
+                          form.getValues("formula") + value
+                        );
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Trigonometry" />
                       </SelectTrigger>
@@ -393,11 +494,17 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-2">
-                    <Select value="" onValueChange={(value) => {
-                      form.setValue("formula", form.getValues("formula") + value);
-                    }}>
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        form.setValue(
+                          "formula",
+                          form.getValues("formula") + value
+                        );
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Conditional" />
                       </SelectTrigger>
@@ -408,13 +515,21 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                         <SelectItem value="<=">&lt;=</SelectItem>
                         <SelectItem value=">">&gt;</SelectItem>
                         <SelectItem value=">=">&gt;=</SelectItem>
-                        <SelectItem value="() ? () : ()">() ? () : ()</SelectItem>
+                        <SelectItem value="() ? () : ()">
+                          () ? () : ()
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Select value="" onValueChange={(value) => {
-                      form.setValue("formula", form.getValues("formula") + value);
-                    }}>
+
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        form.setValue(
+                          "formula",
+                          form.getValues("formula") + value
+                        );
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Boolean logic" />
                       </SelectTrigger>
@@ -430,10 +545,16 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                         <SelectItem value="xnor">xnor</SelectItem>
                       </SelectContent>
                     </Select>
-                    
-                    <Select value="" onValueChange={(value) => {
-                      form.setValue("formula", form.getValues("formula") + value);
-                    }}>
+
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        form.setValue(
+                          "formula",
+                          form.getValues("formula") + value
+                        );
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Constant" />
                       </SelectTrigger>
@@ -444,7 +565,7 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="mt-2">
                     <FormLabel>Expression:</FormLabel>
                     <FormField
@@ -453,10 +574,10 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea 
-                              placeholder="Enter calculation formula" 
-                              className="min-h-[100px] resize-none mt-2" 
-                              {...field} 
+                            <Textarea
+                              placeholder="Enter calculation formula"
+                              className="min-h-[100px] resize-none mt-2"
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -464,26 +585,28 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                       )}
                     />
                   </div>
-                  
 
-                  
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">A:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          A:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="a"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -491,22 +614,26 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">C:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          C:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="c"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -514,22 +641,26 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">E:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          E:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="e"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -537,22 +668,26 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">G:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          G:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="g"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -561,23 +696,27 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">B:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          B:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="b"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -585,22 +724,26 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">D:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          D:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="d"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -608,22 +751,26 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">F:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          F:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="f"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -631,22 +778,26 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
-                        <FormLabel className="min-w-[20px] text-right">H:</FormLabel>
+                        <FormLabel className="min-w-[20px] text-right">
+                          H:
+                        </FormLabel>
                         <FormField
                           control={form.control}
                           name="h"
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
-                                <Input 
-                                  placeholder="Double click to add tag." 
-                                  {...field} 
-                                  onDoubleClick={() => setTagSelectionDialog({
-                                    isOpen: true,
-                                    targetVariable: field.name
-                                  })}
+                                <Input
+                                  placeholder="Double click to add tag."
+                                  {...field}
+                                  onDoubleClick={() =>
+                                    setTagSelectionDialog({
+                                      isOpen: true,
+                                      targetVariable: field.name,
+                                    })
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -660,88 +811,129 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
               </TabsContent>
             </div>
           </Tabs>
-          
+
           <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
-            <Button type="submit" variant="secondary">OK</Button>
-            <Button type="button" variant="outline" onClick={() => onSubmit(form.getValues())}>Cancel</Button>
+            <Button
+              type="submit"
+              variant="secondary"
+              onClick={() => onSubmit(form.getValues())}
+            >
+              OK
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
           </div>
         </form>
       </Form>
 
       {/* Tag Selection Dialog */}
-      <Dialog 
-        open={tagSelectionDialog.isOpen} 
-        onOpenChange={(open) => !open && setTagSelectionDialog({ isOpen: false, targetVariable: "" })}
+      <Dialog
+        open={tagSelectionDialog.isOpen}
+        onOpenChange={(open) =>
+          !open && setTagSelectionDialog({ isOpen: false, targetVariable: "" })
+        }
       >
         <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Select Tag</DialogTitle>
             <DialogDescription>
-              Choose a tag to use as variable {tagSelectionDialog.targetVariable?.toUpperCase()}
+              Choose a tag to use as variable{" "}
+              {tagSelectionDialog.targetVariable?.toUpperCase()}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="flex-1 overflow-auto">
             <div className="space-y-4 p-2">
               {/* Mobile view: Tabs for categories */}
               <div className="block sm:hidden">
                 <Tabs defaultValue="io-tags" className="w-full">
                   <TabsList className="grid grid-cols-5 w-full">
-                    <TabsTrigger value="io-tags" className="flex items-center justify-center">
+                    <TabsTrigger
+                      value="io-tags"
+                      className="flex items-center justify-center"
+                    >
                       <Tag className="h-4 w-4" />
                     </TabsTrigger>
-                    <TabsTrigger value="user-tags" className="flex items-center justify-center">
+                    <TabsTrigger
+                      value="user-tags"
+                      className="flex items-center justify-center"
+                    >
                       <UserCircle className="h-4 w-4" />
                     </TabsTrigger>
-                    <TabsTrigger value="calc-tags" className="flex items-center justify-center">
+                    <TabsTrigger
+                      value="calc-tags"
+                      className="flex items-center justify-center"
+                    >
                       <FileDigit className="h-4 w-4" />
                     </TabsTrigger>
-                    <TabsTrigger value="stats-tags" className="flex items-center justify-center">
+                    <TabsTrigger
+                      value="stats-tags"
+                      className="flex items-center justify-center"
+                    >
                       <BarChart className="h-4 w-4" />
                     </TabsTrigger>
-                    <TabsTrigger value="system-tags" className="flex items-center justify-center">
+                    <TabsTrigger
+                      value="system-tags"
+                      className="flex items-center justify-center"
+                    >
                       <Cog className="h-4 w-4" />
                     </TabsTrigger>
                   </TabsList>
                   <TabsContent value="io-tags" className="mt-2">
                     <Card>
                       <CardHeader className="py-3">
-                        <CardTitle className="text-sm font-medium">IO Tags</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                          IO Tags
+                        </CardTitle>
                       </CardHeader>
                       <CardContent className="py-0 px-2">
                         <div className="space-y-2">
-                          {ioPorts.map(port => (
+                          {ioPorts.map((port) => (
                             <div key={port.id} className="border rounded-md">
-                              <div 
+                              <div
                                 className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
                                 onClick={() => togglePortExpansion(port.id)}
                               >
-                                {expandedPorts.includes(port.id) ? 
-                                  <ChevronDown className="h-4 w-4 mr-1" /> : 
+                                {expandedPorts.includes(port.id) ? (
+                                  <ChevronDown className="h-4 w-4 mr-1" />
+                                ) : (
                                   <ChevronRight className="h-4 w-4 mr-1" />
-                                }
+                                )}
                                 <Server className="h-4 w-4 mr-2 text-muted-foreground" />
                                 <span className="font-medium">{port.name}</span>
-                                <span className="text-xs text-muted-foreground ml-2">({port.type})</span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  ({port.type})
+                                </span>
                               </div>
-                              
+
                               {expandedPorts.includes(port.id) && (
                                 <div className="pl-4 pr-2 pb-2 space-y-2">
-                                  {port.devices.map(device => (
-                                    <div key={device.id} className="border rounded-md">
-                                      <div 
+                                  {port.devices.map((device) => (
+                                    <div
+                                      key={device.id}
+                                      className="border rounded-md"
+                                    >
+                                      <div
                                         className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                                        onClick={() => toggleDeviceExpansion(device.id)}
-                                      >
-                                        {expandedDevices.includes(device.id) ? 
-                                          <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                          <ChevronRight className="h-4 w-4 mr-1" />
+                                        onClick={() =>
+                                          toggleDeviceExpansion(device.id)
                                         }
+                                      >
+                                        {expandedDevices.includes(device.id) ? (
+                                          <ChevronDown className="h-4 w-4 mr-1" />
+                                        ) : (
+                                          <ChevronRight className="h-4 w-4 mr-1" />
+                                        )}
                                         <Cpu className="h-4 w-4 mr-2 text-muted-foreground" />
-                                        <span className="font-medium">{device.name}</span>
-                                        <span className="text-xs text-muted-foreground ml-2">({device.type})</span>
+                                        <span className="font-medium">
+                                          {device.name}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                          ({device.type})
+                                        </span>
                                       </div>
-                                      
+
                                       {expandedDevices.includes(device.id) && (
                                         <div className="pl-4 pr-2 pb-2 overflow-x-auto">
                                           <Table className="min-w-[400px]">
@@ -754,21 +946,30 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                                               </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                              {device.tags?.map(tag => (
+                                              {device.tags?.map((tag) => (
                                                 <TableRow key={tag.id}>
-                                                  <TableCell className="whitespace-nowrap">{tag.name}</TableCell>
-                                                  <TableCell className="whitespace-nowrap">{tag.dataType}</TableCell>
-                                                  <TableCell className="whitespace-nowrap">{tag.address}</TableCell>
+                                                  <TableCell className="whitespace-nowrap">
+                                                    {tag.name}
+                                                  </TableCell>
+                                                  <TableCell className="whitespace-nowrap">
+                                                    {tag.dataType}
+                                                  </TableCell>
+                                                  <TableCell className="whitespace-nowrap">
+                                                    {tag.address}
+                                                  </TableCell>
                                                   <TableCell>
-                                                    <Button 
-                                                      variant="ghost" 
+                                                    <Button
+                                                      variant="ghost"
                                                       size="sm"
                                                       onClick={() => {
                                                         form.setValue(
-                                                          tagSelectionDialog.targetVariable, 
+                                                          tagSelectionDialog.targetVariable,
                                                           `${device.name}:${tag.name}`
                                                         );
-                                                        setTagSelectionDialog({ isOpen: false, targetVariable: "" });
+                                                        setTagSelectionDialog({
+                                                          isOpen: false,
+                                                          targetVariable: "",
+                                                        });
                                                       }}
                                                     >
                                                       Select
@@ -793,12 +994,14 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                   {/* Other tabs content would go here */}
                 </Tabs>
               </div>
-              
+
               {/* Desktop view: Side-by-side layout */}
               <div className="hidden sm:grid sm:grid-cols-5 gap-4">
                 <Card className="sm:col-span-1 h-auto overflow-auto">
                   <CardHeader className="py-3">
-                    <CardTitle className="text-sm font-medium">Tag Categories</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Tag Categories
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="py-0">
                     <div className="space-y-1">
@@ -825,45 +1028,60 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="sm:col-span-4 h-auto overflow-auto">
                   <CardHeader className="py-3">
-                    <CardTitle className="text-sm font-medium">IO Tags</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      IO Tags
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="py-0">
                     <div className="space-y-2">
-                      {ioPorts.map(port => (
+                      {ioPorts.map((port) => (
                         <div key={port.id} className="border rounded-md">
-                          <div 
+                          <div
                             className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
                             onClick={() => togglePortExpansion(port.id)}
                           >
-                            {expandedPorts.includes(port.id) ? 
-                              <ChevronDown className="h-4 w-4 mr-1" /> : 
+                            {expandedPorts.includes(port.id) ? (
+                              <ChevronDown className="h-4 w-4 mr-1" />
+                            ) : (
                               <ChevronRight className="h-4 w-4 mr-1" />
-                            }
+                            )}
                             <Server className="h-4 w-4 mr-2 text-muted-foreground" />
                             <span className="font-medium">{port.name}</span>
-                            <span className="text-xs text-muted-foreground ml-2">({port.type})</span>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              ({port.type})
+                            </span>
                           </div>
-                          
+
                           {expandedPorts.includes(port.id) && (
                             <div className="pl-4 pr-2 pb-2 space-y-2">
-                              {port.devices.map(device => (
-                                <div key={device.id} className="border rounded-md">
-                                  <div 
+                              {port.devices.map((device) => (
+                                <div
+                                  key={device.id}
+                                  className="border rounded-md"
+                                >
+                                  <div
                                     className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                                    onClick={() => toggleDeviceExpansion(device.id)}
-                                  >
-                                    {expandedDevices.includes(device.id) ? 
-                                      <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                      <ChevronRight className="h-4 w-4 mr-1" />
+                                    onClick={() =>
+                                      toggleDeviceExpansion(device.id)
                                     }
+                                  >
+                                    {expandedDevices.includes(device.id) ? (
+                                      <ChevronDown className="h-4 w-4 mr-1" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4 mr-1" />
+                                    )}
                                     <Cpu className="h-4 w-4 mr-2 text-muted-foreground" />
-                                    <span className="font-medium">{device.name}</span>
-                                    <span className="text-xs text-muted-foreground ml-2">({device.type})</span>
+                                    <span className="font-medium">
+                                      {device.name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      ({device.type})
+                                    </span>
                                   </div>
-                                  
+
                                   {expandedDevices.includes(device.id) && (
                                     <div className="pl-4 pr-2 pb-2 overflow-x-auto">
                                       <Table className="min-w-[400px]">
@@ -876,21 +1094,30 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
                                           </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                          {device.tags?.map(tag => (
+                                          {device.tags?.map((tag) => (
                                             <TableRow key={tag.id}>
-                                              <TableCell className="whitespace-nowrap">{tag.name}</TableCell>
-                                              <TableCell className="whitespace-nowrap">{tag.dataType}</TableCell>
-                                              <TableCell className="whitespace-nowrap">{tag.address}</TableCell>
+                                              <TableCell className="whitespace-nowrap">
+                                                {tag.name}
+                                              </TableCell>
+                                              <TableCell className="whitespace-nowrap">
+                                                {tag.dataType}
+                                              </TableCell>
+                                              <TableCell className="whitespace-nowrap">
+                                                {tag.address}
+                                              </TableCell>
                                               <TableCell>
-                                                <Button 
-                                                  variant="ghost" 
+                                                <Button
+                                                  variant="ghost"
                                                   size="sm"
                                                   onClick={() => {
                                                     form.setValue(
-                                                      tagSelectionDialog.targetVariable, 
+                                                      tagSelectionDialog.targetVariable,
                                                       `${device.name}:${tag.name}`
                                                     );
-                                                    setTagSelectionDialog({ isOpen: false, targetVariable: "" });
+                                                    setTagSelectionDialog({
+                                                      isOpen: false,
+                                                      targetVariable: "",
+                                                    });
                                                   }}
                                                 >
                                                   Select
@@ -917,5 +1144,5 @@ export function CalculationTagForm({ onSubmit, initialValues }: CalculationTagFo
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

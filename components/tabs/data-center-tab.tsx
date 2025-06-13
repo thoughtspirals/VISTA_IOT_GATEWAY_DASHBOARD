@@ -1,21 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserTagsForm } from "@/components/forms/user-tags-form"
-import { StatsTagsForm } from "@/components/forms/stats-tags-form"
-import { SystemTagsForm } from "@/components/forms/system-tags-form"
-import { Tag, Calculator, BarChart3, Settings } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserTagsForm } from "@/components/forms/user-tags-form";
+import { StatsTagsForm } from "@/components/forms/stats-tags-form";
+import { SystemTagsForm } from "@/components/forms/system-tags-form";
+import { Tag, Calculator, BarChart3, Settings } from "lucide-react";
 
 export default function DataCenterTab() {
-  const [activeTab, setActiveTab] = useState("io-tags")
+  const [activeTab, setActiveTab] = useState("io-tags");
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Data Center Management</CardTitle>
-        <CardDescription>Configure and manage your data tags for the IoT gateway.</CardDescription>
+        <CardDescription>
+          Configure and manage your data tags for the IoT gateway.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -28,7 +36,10 @@ export default function DataCenterTab() {
               <Tag className="h-4 w-4" />
               User Tags
             </TabsTrigger>
-            <TabsTrigger value="calculation-tags" className="flex items-center gap-2">
+            <TabsTrigger
+              value="calculation-tags"
+              className="flex items-center gap-2"
+            >
               <Calculator className="h-4 w-4" />
               Calculation Tags
             </TabsTrigger>
@@ -36,7 +47,10 @@ export default function DataCenterTab() {
               <BarChart3 className="h-4 w-4" />
               Stats Tags
             </TabsTrigger>
-            <TabsTrigger value="system-tags" className="flex items-center gap-2">
+            <TabsTrigger
+              value="system-tags"
+              className="flex items-center gap-2"
+            >
               <Settings className="h-4 w-4" />
               System Tags
             </TabsTrigger>
@@ -76,5 +90,5 @@ export default function DataCenterTab() {
         </Tabs>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -41,6 +41,13 @@ import {
 import { CalculationTagForm } from "@/components/forms/calculation-tag-form";
 import type { Port } from "@/components/tabs/io-tag-tab";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 // Type definitions
 // Import the z schema from the form component to ensure type compatibility
 import { z } from "zod";
@@ -162,6 +169,8 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
     }
   };
 
+  const noCalculationTags = calculationTags.length === 0;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -178,103 +187,166 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
                 <Plus className="h-4 w-4 mr-2" />
                 Add...
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const selectedTag = calculationTags.find(
-                    (t) => t.id === selectedTagId
-                  );
-                  if (selectedTag) {
-                    setDeleteDialog({ isOpen: true, tag: selectedTag });
-                  } else {
-                    toast({
-                      title: "No Tag Selected",
-                      description: "Please select a tag to delete.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const selectedTag = calculationTags.find(
-                    (t) => t.id === selectedTagId
-                  );
-                  if (selectedTag) {
-                    setEditingTag(selectedTag);
-                  } else {
-                    toast({
-                      title: "No Tag Selected",
-                      description: "Please select a tag to modify.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Modify...
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (selectedTagId) {
-                    const index = calculationTags.findIndex(
-                      (t) => t.id === selectedTagId
-                    );
-                    if (index > 0) {
-                      handleMoveUp(index);
-                    } else {
-                      toast({
-                        title: "Cannot Move Up",
-                        description: "The selected tag is already at the top.",
-                        variant: "destructive",
-                      });
-                    }
-                  } else {
-                    toast({
-                      title: "No Tag Selected",
-                      description: "Please select a tag to move up.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <ArrowUp className="h-4 w-4 mr-2" />
-                Up
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (selectedTagId) {
-                    const index = calculationTags.findIndex(
-                      (t) => t.id === selectedTagId
-                    );
-                    if (index < calculationTags.length - 1) {
-                      handleMoveDown(index);
-                    } else {
-                      toast({
-                        title: "Cannot Move Down",
-                        description:
-                          "The selected tag is already at the bottom.",
-                        variant: "destructive",
-                      });
-                    }
-                  } else {
-                    toast({
-                      title: "No Tag Selected",
-                      description: "Please select a tag to move down.",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <ArrowDown className="h-4 w-4 mr-2" />
-                Down
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const selectedTag = calculationTags.find(
+                            (t) => t.id === selectedTagId
+                          );
+                          if (selectedTag) {
+                            setDeleteDialog({ isOpen: true, tag: selectedTag });
+                          } else {
+                            toast({
+                              title: "No Tag Selected",
+                              description: "Please select a tag to delete.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        disabled={noCalculationTags}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {noCalculationTags && (
+                    <TooltipContent>
+                      No calculation tags to delete
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const selectedTag = calculationTags.find(
+                            (t) => t.id === selectedTagId
+                          );
+                          if (selectedTag) {
+                            setEditingTag(selectedTag);
+                          } else {
+                            toast({
+                              title: "No Tag Selected",
+                              description: "Please select a tag to modify.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        disabled={noCalculationTags || !selectedTagId}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Modify...
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {noCalculationTags && (
+                    <TooltipContent>
+                      No calculation tags to modify
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (selectedTagId) {
+                            const index = calculationTags.findIndex(
+                              (t) => t.id === selectedTagId
+                            );
+                            if (index > 0) {
+                              handleMoveUp(index);
+                            } else {
+                              toast({
+                                title: "Cannot Move Up",
+                                description:
+                                  "The selected tag is already at the top.",
+                                variant: "destructive",
+                              });
+                            }
+                          } else {
+                            toast({
+                              title: "No Tag Selected",
+                              description: "Please select a tag to move up.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        disabled={
+                          noCalculationTags ||
+                          !selectedTagId ||
+                          calculationTags.length === 1
+                        }
+                      >
+                        <ArrowUp className="h-4 w-4 mr-2" />
+                        Up
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {noCalculationTags && (
+                    <TooltipContent>No calculation tags to move</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <span>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          if (selectedTagId) {
+                            const index = calculationTags.findIndex(
+                              (t) => t.id === selectedTagId
+                            );
+                            if (index < calculationTags.length - 1) {
+                              handleMoveDown(index);
+                            } else {
+                              toast({
+                                title: "Cannot Move Down",
+                                description:
+                                  "The selected tag is already at the bottom.",
+                                variant: "destructive",
+                              });
+                            }
+                          } else {
+                            toast({
+                              title: "No Tag Selected",
+                              description: "Please select a tag to move down.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        disabled={
+                          noCalculationTags ||
+                          !selectedTagId ||
+                          calculationTags.length === 1
+                        }
+                      >
+                        <ArrowDown className="h-4 w-4 mr-2" />
+                        Down
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {noCalculationTags && (
+                    <TooltipContent>No calculation tags to move</TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
@@ -350,7 +422,10 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
               Configure a new calculation tag with formula and variables
             </DialogDescription>
           </DialogHeader>
-          <CalculationTagForm onSubmit={handleAddTag} />
+          <CalculationTagForm
+            onSubmit={handleAddTag}
+            onCancel={() => setShowAddForm(false)}
+          />
         </DialogContent>
       </Dialog>
 
@@ -369,6 +444,7 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
           {editingTag && (
             <CalculationTagForm
               onSubmit={handleUpdateTag}
+              onCancel={() => setEditingTag(null)}
               initialValues={editingTag}
             />
           )}

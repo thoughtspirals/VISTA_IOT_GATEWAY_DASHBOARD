@@ -1,3 +1,4 @@
+// Main working io tag tab code
 "use client";
 
 import { useState, useEffect } from "react";
@@ -683,7 +684,7 @@ export default function IOTagManagement({
                       useAsciiProtocol: Number(
                         selectedDevice.device.useAsciiProtocol
                       ),
-                      tags: selectedDevice.device.tags ?? [], // ✅ Ensure it's always an array
+                      tags: selectedDevice.device.tags ?? [], // Ensure it's always an array
                     }}
                     portId={selectedDevice.portId}
                     onUpdate={handleUpdateTags}
@@ -1065,7 +1066,6 @@ export default function IOTagManagement({
           )}
         </CardContent>
       </Card>
-
       {/* Add Port Dialog */}
       <Dialog open={showAddPortForm} onOpenChange={setShowAddPortForm}>
         <DialogContent className="max-w-3xl">
@@ -1078,7 +1078,6 @@ export default function IOTagManagement({
           <IOPortForm onSubmit={handleAddPort} />
         </DialogContent>
       </Dialog>
-
       {/* Edit Port Dialog */}
       <Dialog
         open={!!editingPort}
@@ -1094,12 +1093,17 @@ export default function IOTagManagement({
           {editingPort && (
             <IOPortForm
               onSubmit={handleUpdatePort}
-              existingConfig={editingPort}
+              existingConfig={{
+                ...editingPort,
+                devices: editingPort.devices.map((device) => ({
+                  ...device,
+                  addDeviceNameAsPrefix: device.addDeviceNameAsPrefix ?? false,
+                })),
+              }}
             />
           )}
         </DialogContent>
       </Dialog>
-
       {/* Delete Port Confirmation Dialog */}
       <AlertDialog
         open={deletePortDialog.isOpen}
@@ -1124,7 +1128,6 @@ export default function IOTagManagement({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
       {/* Add Device Dialog */}
       <Dialog open={showAddDeviceForm} onOpenChange={setShowAddDeviceForm}>
         <DialogContent className="max-w-3xl">
@@ -1145,7 +1148,6 @@ export default function IOTagManagement({
           )}
         </DialogContent>
       </Dialog>
-
       {/* Edit Device Dialog */}
       <Dialog
         open={!!editingDevice}
@@ -1187,7 +1189,6 @@ export default function IOTagManagement({
           )}
         </DialogContent>
       </Dialog>
-
       {/* Delete Device Confirmation Dialog */}
       <AlertDialog
         open={deleteDeviceDialog.isOpen}

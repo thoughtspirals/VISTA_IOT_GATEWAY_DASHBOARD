@@ -1,3 +1,4 @@
+// Working Dashboard File
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
@@ -202,7 +203,7 @@ function DashboardContent() {
       active: activeTab === "datacenter",
       submenu: [
         {
-          title: "IO Port",
+          title: "IO Ports",
           href: "?tab=datacenter&section=io-tag",
           icon: Tag,
           isIoTagSection: true,
@@ -436,7 +437,6 @@ function DashboardContent() {
           />
         </div>
       </div>
-
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
@@ -720,7 +720,6 @@ function DashboardContent() {
           )}
         </div>
       </div>
-
       {/* Dialogs */}
       <RestartGatewayDialog
         open={restartDialogOpen}
