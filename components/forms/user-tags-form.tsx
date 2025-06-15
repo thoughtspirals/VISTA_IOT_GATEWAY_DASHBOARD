@@ -57,6 +57,7 @@ function TagDialog({
   editTag?: any | null;
 }) {
   const [tagName, setTagName] = useState("");
+  const [isNameTouched, setIsNameTouched] = useState(false);
   const [dataType, setDataType] = useState("Analog");
   const [defaultValue, setDefaultValue] = useState("0.0");
   const [spanHigh, setSpanHigh] = useState("1000");
@@ -104,7 +105,12 @@ function TagDialog({
   }, [open, editTag]);
 
   const handleSubmit = () => {
-    // Create a tag object based on the form values
+    setIsNameTouched(true);
+
+    if (!tagName.trim()) {
+      return; // stop submission if name is empty
+    }
+
     const tagData = {
       id: editTag ? editTag.id : Date.now(),
       name: tagName,
@@ -118,10 +124,7 @@ function TagDialog({
       description: description,
     };
 
-    // Call the onSaveTag callback with the tag and whether it's an edit
     onSaveTag(tagData, !!editTag);
-
-    // Close the dialog
     onOpenChange(false);
   };
 
@@ -143,13 +146,24 @@ function TagDialog({
 
           <div className="space-y-4">
             <div className="grid grid-cols-[120px_1fr] items-center gap-2">
-              <Label htmlFor="tag-name">Name:</Label>
-              <Input
-                id="tag-name"
-                value={tagName}
-                onChange={(e) => setTagName(e.target.value)}
-                placeholder="Enter name"
-              />
+              <Label htmlFor="tag-name" className="flex items-center gap-1">
+                Name: <span className="text-red-500">*</span>
+              </Label>
+              <div>
+                <Input
+                  id="tag-name"
+                  value={tagName}
+                  onChange={(e) => setTagName(e.target.value)}
+                  onBlur={() => setIsNameTouched(true)}
+                  placeholder="Enter name"
+                  className={
+                    isNameTouched && !tagName.trim() ? "border-red-500" : ""
+                  }
+                />
+                {isNameTouched && !tagName.trim() && (
+                  <p className="text-sm text-red-500 mt-1">Name is required.</p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-[120px_1fr] items-center gap-2">

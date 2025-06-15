@@ -114,7 +114,8 @@ export function CalculationTagForm({
 }: CalculationTagFormProps) {
   // Initialize ioPorts as an empty array
   const [ioPorts, setIoPorts] = useState<Port[]>([]);
-
+  // const [tagName, setTagName] = useState("");
+  // const [tagNameError, setTagNameError] = useState("");
   // State for expanded items in tree
   const [expandedPorts, setExpandedPorts] = useState<string[]>([]);
   const [expandedDevices, setExpandedDevices] = useState<string[]>([]);
@@ -210,9 +211,19 @@ export function CalculationTagForm({
     },
   });
 
-  // Handle form submission
-  function handleSubmit(values: z.infer<typeof calculationTagSchema>) {
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors },
+  // } = useForm<z.infer<typeof calculationTagSchema>>({
+  //   resolver: zodResolver(calculationTagSchema),
+  // });
+
+  // Custom submit logic, called only if validation passes
+
+  function onValidSubmit(values: FormValues) {
     onSubmit(values);
+    onCancel();
   }
 
   return (
@@ -221,7 +232,7 @@ export function CalculationTagForm({
         New Tag
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form onSubmit={form.handleSubmit(onValidSubmit)}>
           <Tabs defaultValue="basic" className="w-full">
             <div className="border-b px-4">
               <TabsList className="bg-transparent h-12">
@@ -250,14 +261,25 @@ export function CalculationTagForm({
               <TabsContent value="basic" className="mt-0">
                 <div className="space-y-4">
                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-                    <FormLabel className="text-right">Name:</FormLabel>
+                    <FormLabel className="text-right">
+                      Name: <span className="text-red-500">*</span>
+                    </FormLabel>
+
                     <FormField
                       control={form.control}
                       name="name"
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input placeholder="NewTag" {...field} />
+                            <Input
+                              placeholder="New Calculation Tag"
+                              {...field}
+                              className={
+                                form.formState.errors.name
+                                  ? "border-red-500"
+                                  : ""
+                              }
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -813,11 +835,7 @@ export function CalculationTagForm({
           </Tabs>
 
           <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
-            <Button
-              type="submit"
-              variant="secondary"
-              onClick={() => onSubmit(form.getValues())}
-            >
+            <Button type="submit" variant="secondary">
               OK
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>

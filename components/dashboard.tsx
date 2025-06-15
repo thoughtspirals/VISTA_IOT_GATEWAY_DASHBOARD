@@ -586,109 +586,14 @@ function DashboardContent() {
                     <NetworkTab />
                   </TabsContent>
 
-                  <TabsContent value="datacenter" className="mt-6 space-y-6">
-                    {section === "io-tag" ? (
-                      <IOTagManagement
-                        ioPorts={ioPorts}
-                        setIoPorts={setIoPorts}
-                        selectedPortId={portId}
-                        selectedDeviceId={deviceItemId}
-                      />
-                    ) : section === "user-tag" ? (
-                      <UserTagsForm />
-                    ) : section === "stats-tag" ? (
-                      <StatsTagsForm />
-                    ) : section === "system-tag" ? (
-                      <SystemTagsForm />
-                    ) : section === "calc-tag" ? (
-                      <CalculationTagTab ioPorts={ioPorts} />
-                    ) : (
-                      <div className="rounded-lg border p-8">
-                        <h2 className="text-lg font-semibold mb-4">
-                          Data Center Management
-                        </h2>
-                        <p className="text-muted-foreground mb-4">
-                          Configure and manage your data tags for the IoT
-                          gateway.
-                        </p>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                          <Card
-                            className="p-4 cursor-pointer hover:border-primary transition-colors"
-                            onClick={() =>
-                              handleNavigation("?tab=datacenter&section=io-tag")
-                            }
-                          >
-                            <h3 className="font-medium flex items-center">
-                              <Tag className="mr-2 h-4 w-4" /> IO Tags
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Manage input/output data tags
-                            </p>
-                          </Card>
-                          <Card
-                            className="p-4 cursor-pointer hover:border-primary transition-colors"
-                            onClick={() =>
-                              handleNavigation(
-                                "?tab=datacenter&section=user-tag"
-                              )
-                            }
-                          >
-                            <h3 className="font-medium flex items-center">
-                              <UserCircle className="mr-2 h-4 w-4" /> User Tags
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Configure custom user-defined tags
-                            </p>
-                          </Card>
-                          <Card
-                            className="p-4 cursor-pointer hover:border-primary transition-colors"
-                            onClick={() =>
-                              handleNavigation(
-                                "?tab=datacenter&section=calc-tag"
-                              )
-                            }
-                          >
-                            <h3 className="font-medium flex items-center">
-                              <FileDigit className="mr-2 h-4 w-4" /> Calculation
-                              Tags
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Set up calculated data points
-                            </p>
-                          </Card>
-                          <Card
-                            className="p-4 cursor-pointer hover:border-primary transition-colors"
-                            onClick={() =>
-                              handleNavigation(
-                                "?tab=datacenter&section=stats-tag"
-                              )
-                            }
-                          >
-                            <h3 className="font-medium flex items-center">
-                              <BarChart className="mr-2 h-4 w-4" /> Stats Tags
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Configure statistical data points
-                            </p>
-                          </Card>
-                          <Card
-                            className="p-4 cursor-pointer hover:border-primary transition-colors"
-                            onClick={() =>
-                              handleNavigation(
-                                "?tab=datacenter&section=system-tag"
-                              )
-                            }
-                          >
-                            <h3 className="font-medium flex items-center">
-                              <Cog className="mr-2 h-4 w-4" /> System Tags
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Manage system-level tags
-                            </p>
-                          </Card>
-                        </div>
-                      </div>
-                    )}
+                  <TabsContent value="datacenter">
+                    <DataCenterTab
+                      section={searchParams.get("section") || ""}
+                      selectedPortId={searchParams.get("portId") || ""}
+                      selectedDeviceId={searchParams.get("deviceId") || ""}
+                      ioPorts={ioPorts}
+                      setIoPorts={setIoPorts}
+                    />
                   </TabsContent>
 
                   <TabsContent value="security" className="mt-6 space-y-6">

@@ -158,6 +158,19 @@ export function DeviceForm({
     });
   };
 
+  const DEVICE_TYPES = [
+    "Modbus RTU",
+    "Advantech ADAM 2000 Series (Modbus RTU)",
+    "Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)",
+    "Advantech WebCon 2000 Series",
+    "Advantech WebOP HMI (Modbus RTU)",
+    "Delta DVP Series PLC (Modbus RTU)",
+    "M System, Modbus Compatible, RX Series (Modbus RTU)",
+    "Schneider ION6200 (Modbus RTU)",
+    "WAGO I/O System 750",
+    "YASKAWA MP900 series, MemoBus Modbus compatible (Modbus RTU)",
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -212,35 +225,11 @@ export function DeviceForm({
                     <SelectValue placeholder="Select device type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Modbus RTU">Modbus RTU</SelectItem>
-                    <SelectItem value="Advantech ADAM 2000 Series (Modbus RTU)">
-                      Advantech ADAM 2000 Series (Modbus RTU)
-                    </SelectItem>
-                    <SelectItem value="Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)">
-                      Advantech ADAM 4000 Series (ADAM ASCII/Modbus RTU)
-                    </SelectItem>
-                    <SelectItem value="Advantech WebCon 2000 Series">
-                      Advantech WebCon 2000 Series
-                    </SelectItem>
-                    <SelectItem value="Advantech WebOP HMI (Modbus RTU)">
-                      Advantech WebOP HMI (Modbus RTU)
-                    </SelectItem>
-                    <SelectItem value="Delta DVP Series PLC (Modbus RTU)">
-                      Delta DVP Series PLC (Modbus RTU)
-                    </SelectItem>
-                    <SelectItem value="M System, Modbus Compatible, RX Series (Modbus RTU)">
-                      M System, Modbus Compatible, RX Series (Modbus RTU)
-                    </SelectItem>
-                    <SelectItem value="Schneider ION6200 (Modbus RTU)">
-                      Schneider ION6200 (Modbus RTU)
-                    </SelectItem>
-                    <SelectItem value="WAGO I/O System 750">
-                      WAGO I/O System 750
-                    </SelectItem>
-                    <SelectItem value="YASKAWA MP900 series, MemoBus Modbus compatible (Modbus RTU)">
-                      YASKAWA MP900 series, MemoBus Modbus compatible (Modbus
-                      RTU)
-                    </SelectItem>
+                    {DEVICE_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -272,6 +261,7 @@ export function DeviceForm({
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(Number(e.target.value))}
                   min={1}
+                  max={255}
                 />
               </div>
 
