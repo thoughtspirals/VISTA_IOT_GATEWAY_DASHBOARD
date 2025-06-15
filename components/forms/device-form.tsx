@@ -19,6 +19,77 @@ import { useConfigStore } from "@/lib/stores/configuration-store";
 import type { IOPortConfig } from "./io-tag-form"; // Assuming IOPortConfig is exported from there
 import type { IOTag } from "./io-tag-detail"; // Import the definitive IOTag interface
 import { AlertCircle } from "lucide-react";
+import { z } from "zod";
+
+export const deviceConfigSchema = z.object({
+  id: z.string(),
+  enabled: z.boolean(),
+  name: z.string().min(1, "Device name is required"),
+  deviceType: z.string().min(1, "Device type is required"),
+  unitNumber: z.coerce
+    .number()
+    .int("Must be an integer")
+    .min(1, "Unit number must be at least 1")
+    .max(255, "Unit number must be at most 255"), // or 247 for Modbus strict
+  tagWriteType: z.string().min(1, "Tag write type is required"),
+  description: z.string().optional().default(""),
+  addDeviceNameAsPrefix: z.boolean(),
+  useAsciiProtocol: z.coerce
+    .number()
+    .int()
+    .refine((val) => val === 0 || val === 1, {
+      message: "useAsciiProtocol must be 0 or 1",
+    }),
+  packetDelay: z.coerce
+    .number()
+    .int()
+    .min(0, "Packet delay must be non-negative"),
+  digitalBlockSize: z.coerce.number().int().min(0),
+  analogBlockSize: z.coerce.number().int().min(0),
+  tags: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      dataType: z.string(),
+      address: z.string(),
+      description: z.string(),
+    })
+  ),
+});
+
+// Example object that follows the DeviceConfig shape
+const config = {
+  id: "dev001",
+  enabled: true,
+  name: "Sensor A",
+  deviceType: "Modbus RTU",
+  unitNumber: 5,
+  tagWriteType: "Bit",
+  description: "Main Modbus sensor",
+  addDeviceNameAsPrefix: true,
+  useAsciiProtocol: 1,
+  packetDelay: 10,
+  digitalBlockSize: 32,
+  analogBlockSize: 16,
+  tags: [
+    {
+      id: "tag001",
+      name: "Voltage",
+      dataType: "Analog",
+      address: "40001",
+      description: "Reads voltage",
+    },
+  ],
+};
+
+const result = deviceConfigSchema.safeParse(config);
+
+if (!result.success) {
+  console.error("❌ Validation failed:", result.error.format());
+} else {
+  console.log("✅ Valid config:", result.data);
+  // Save to localStorage, DB, or send to backend
+}
 
 export interface DeviceConfig {
   id: string;

@@ -362,6 +362,7 @@ export function IOTagDetailView({
                 <TableHead>Address</TableHead>
                 <TableHead>Conversion Type</TableHead>
                 <TableHead>Scale Type</TableHead>
+                <TableHead>Length</TableHead>
                 <TableHead>Read Write</TableHead>
                 <TableHead>Description</TableHead>
               </TableRow>
@@ -402,6 +403,7 @@ export function IOTagDetailView({
                       {tag.conversionType || "FLOAT, Big Endian (ABCD)"}
                     </TableCell>
                     <TableCell>{tag.scaleType || "No Scale"}</TableCell>
+                    <TableCell>{tag.lengthBit || "Length Bit"}</TableCell>
                     <TableCell>{tag.readWrite || "Read/Write"}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
                       {tag.description}
