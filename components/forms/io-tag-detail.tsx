@@ -311,6 +311,7 @@ export function IOTagDetailView({
       p.id === portId ? targetPort : p
     );
     updateConfig(["io_setup", "ports"], finalUpdatedPorts);
+    localStorage.setItem("io_ports_data", JSON.stringify(finalUpdatedPorts));
 
     setTagFormOpen(false);
     setEditingTag(null);

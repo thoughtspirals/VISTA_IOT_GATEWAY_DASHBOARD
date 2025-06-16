@@ -36,7 +36,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, FileText, Edit } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { TagSelectionDialog } from "@/components/dialogs/tag-selection-dialog";
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog";
 
 // Stats Tag Dialog Component
 function StatsTagDialog({

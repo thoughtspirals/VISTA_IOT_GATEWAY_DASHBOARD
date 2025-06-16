@@ -52,6 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog";
 
 // Define the form schema
 const calculationTagSchema = z.object({
@@ -209,6 +210,7 @@ export function CalculationTagForm({
       spanLow: 0,
       isParent: false,
     },
+    mode: "onChange",
   });
 
   // const {
@@ -224,6 +226,7 @@ export function CalculationTagForm({
   function onValidSubmit(values: FormValues) {
     onSubmit(values);
     onCancel();
+    console.log("Submitted");
   }
 
   return (
@@ -631,11 +634,24 @@ export function CalculationTagForm({
                                   }
                                 />
                               </FormControl>
+
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
+                      <TagSelectionDialog
+                        open={tagSelectionDialog.isOpen}
+                        onOpenChange={(isOpen) =>
+                          setTagSelectionDialog((prev) => ({
+                            ...prev,
+                            isOpen,
+                          }))
+                        }
+                        onSelectTag={(tag) => {
+                          console.log("Selected tag:", tag);
+                        }}
+                      />
 
                       <div className="flex items-center gap-2 mb-2">
                         <FormLabel className="min-w-[20px] text-right">
@@ -833,6 +849,18 @@ export function CalculationTagForm({
               </TabsContent>
             </div>
           </Tabs>
+          {/* 🔍 Validation error output */}
+          {Object.keys(form.formState.errors).length > 0 && (
+            <div className="text-red-500 text-sm p-2 border border-red-300 rounded bg-red-50 mt-4">
+              <ul className="list-disc list-inside">
+                {Object.entries(form.formState.errors).map(([field, error]) => (
+                  <li key={field}>
+                    <strong>{field}:</strong> {error?.message as string}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
             <Button type="submit" variant="secondary">
