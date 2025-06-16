@@ -84,6 +84,11 @@ function StatsTagDialog({
   };
 
   const handleSubmit = () => {
+    if (!tagName || !referTag) {
+      alert("Please fill in both the Name and Refer Tag fields.");
+      return;
+    }
+
     const tagData = {
       id: editTag ? editTag.id : Date.now(),
       name: tagName,
@@ -107,7 +112,7 @@ function StatsTagDialog({
         <div className="p-4 border rounded-md bg-slate-100 space-y-4">
           <div className="grid grid-cols-[100px_1fr] items-center gap-2">
             <Label htmlFor="tag-name" className="text-slate-700">
-              Name:
+              Name:<span className="text-red-500">*</span>
             </Label>
             <Input
               id="tag-name"
@@ -120,7 +125,7 @@ function StatsTagDialog({
 
           <div className="grid grid-cols-[100px_1fr] items-center gap-2">
             <Label htmlFor="refer-tag" className="text-slate-700">
-              Refer Tag:
+              Refer Tag: <span className="text-red-500">*</span>
             </Label>
             <div className="flex">
               <Input
