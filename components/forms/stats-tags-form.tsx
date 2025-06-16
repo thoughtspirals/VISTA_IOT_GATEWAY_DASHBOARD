@@ -34,11 +34,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, FileText, Edit } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog";
+import { useConfigStore } from "@/lib/stores/configuration-store";
 
-// Stats Tag Dialog Component
 function StatsTagDialog({
   open,
   onOpenChange,
@@ -53,16 +53,14 @@ function StatsTagDialog({
   const [tagName, setTagName] = useState("");
   const [tagType, setTagType] = useState("Average");
   const [referTag, setReferTag] = useState("");
-  const [updateCycle, setUpdateCycle] = useState("1");
+  const [updateCycle, setUpdateCycle] = useState("60");
   const [updateUnit, setUpdateUnit] = useState("sec");
   const [description, setDescription] = useState("");
   const [tagSelectionDialogOpen, setTagSelectionDialogOpen] = useState(false);
 
-  // Reset form when dialog opens or when editTag changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       if (editTag) {
-        // If editing an existing tag, populate the form with its values
         setTagName(editTag.name || "");
         setTagType(editTag.type || "Average");
         setReferTag(editTag.referTag || "");
@@ -70,7 +68,6 @@ function StatsTagDialog({
         setUpdateUnit(editTag.updateUnit || "sec");
         setDescription(editTag.description || "");
       } else {
-        // If adding a new tag, reset the form
         setTagName("");
         setTagType("Average");
         setReferTag("");
@@ -78,18 +75,15 @@ function StatsTagDialog({
         setUpdateUnit("sec");
         setDescription("");
       }
-      // Close tag selection dialog if it was open
       setTagSelectionDialogOpen(false);
     }
   }, [open, editTag]);
 
-  // Handle tag selection from the tag selection dialog
   const handleTagSelection = (selectedTag: any) => {
     setReferTag(selectedTag.name);
   };
 
   const handleSubmit = () => {
-    // Create a tag object based on the form values
     const tagData = {
       id: editTag ? editTag.id : Date.now(),
       name: tagName,
@@ -99,11 +93,7 @@ function StatsTagDialog({
       updateUnit: updateUnit,
       description: description,
     };
-
-    // Call the onSaveTag callback with the tag and whether it's an edit
     onSaveTag(tagData, !!editTag);
-
-    // Close the dialog
     onOpenChange(false);
   };
 
@@ -136,7 +126,6 @@ function StatsTagDialog({
               <Input
                 id="refer-tag"
                 value={referTag}
-                onChange={(e) => setReferTag(e.target.value)}
                 className="bg-white rounded-r-none"
                 readOnly
               />
@@ -177,11 +166,7 @@ function StatsTagDialog({
                 onChange={(e) => setUpdateCycle(e.target.value)}
                 className="bg-white w-full rounded-r-none"
               />
-              <Select
-                value={updateUnit}
-                onValueChange={setUpdateUnit}
-                defaultValue="sec"
-              >
+              <Select value={updateUnit} onValueChange={setUpdateUnit}>
                 <SelectTrigger className="bg-white w-20 rounded-l-none border-l-0">
                   <SelectValue />
                 </SelectTrigger>
@@ -209,22 +194,12 @@ function StatsTagDialog({
         </div>
 
         <DialogFooter className="mt-4 flex justify-end gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="bg-gray-100"
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            className="bg-gray-100 hover:bg-gray-200 text-black"
-          >
-            OK
-          </Button>
+          <Button onClick={handleSubmit}>OK</Button>
         </DialogFooter>
 
-        {/* Tag Selection Dialog */}
         <TagSelectionDialog
           open={tagSelectionDialogOpen}
           onOpenChange={setTagSelectionDialogOpen}
@@ -236,7 +211,8 @@ function StatsTagDialog({
 }
 
 export function StatsTagsForm() {
-  const [tags, setTags] = useState<any[]>([]);
+  const { getConfig, updateConfig } = useConfigStore();
+  const tags = getConfig().stats_tags || [];
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<any | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | number | null>(
@@ -244,35 +220,11 @@ export function StatsTagsForm() {
   );
   const { toast } = useToast();
 
-  // Load stats tags from localStorage on component mount
-  useEffect(() => {
-    const savedTags = localStorage.getItem("stats_tags_data");
-    if (savedTags) {
-      try {
-        const parsedTags = JSON.parse(savedTags);
-        setTags(parsedTags);
-      } catch (error) {
-        console.error("Error loading stats tags from localStorage:", error);
-      }
-    }
-  }, []);
-
-  // Save tags to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem("stats_tags_data", JSON.stringify(tags));
-    } catch (error) {
-      console.error("Error saving stats tags to localStorage:", error);
-    }
-  }, [tags]);
-
-  // Function to open dialog for adding a new tag
   const handleAddTag = () => {
-    setEditingTag(null); // Not editing, creating new
+    setEditingTag(null);
     setTagDialogOpen(true);
   };
 
-  // Function to open dialog for modifying a tag
   const handleModifyTag = () => {
     if (selectedTagId) {
       const tagToEdit = tags.find((tag: any) => tag.id === selectedTagId);
@@ -289,29 +241,23 @@ export function StatsTagsForm() {
     }
   };
 
-  // Function to save a tag (new or edited)
   const saveTag = (tag: any, isEdit: boolean) => {
-    if (isEdit) {
-      // Update existing tag
-      setTags(tags.map((t: any) => (t.id === tag.id ? tag : t)));
-      toast({
-        title: "Tag Updated",
-        description: `Tag "${tag.name}" has been updated successfully.`,
-      });
-    } else {
-      // Add new tag
-      setTags([...tags, tag]);
-      toast({
-        title: "Tag Added",
-        description: `Tag "${tag.name}" has been added successfully.`,
-      });
-    }
+    const updatedTags = isEdit
+      ? tags.map((t: any) => (t.id === tag.id ? tag : t))
+      : [...tags, tag];
+    updateConfig(["stats_tags"], updatedTags);
+    toast({
+      title: isEdit ? "Tag Updated" : "Tag Added",
+      description: `Tag "${tag.name}" has been ${
+        isEdit ? "updated" : "added"
+      } successfully.`,
+    });
   };
 
-  // Function to delete a selected tag
   const handleDeleteTag = () => {
     if (selectedTagId) {
-      setTags(tags.filter((tag: any) => tag.id !== selectedTagId));
+      const updatedTags = tags.filter((tag: any) => tag.id !== selectedTagId);
+      updateConfig(["stats_tags"], updatedTags);
       setSelectedTagId(null);
       toast({
         title: "Tag Deleted",
@@ -335,33 +281,18 @@ export function StatsTagsForm() {
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Button
-            type="button"
             onClick={handleAddTag}
-            className="flex items-center gap-1 bg-green-500 hover:bg-green-600"
+            className="bg-green-500 hover:bg-green-600"
           >
-            <Plus className="h-4 w-4" />
-            Add...
+            <Plus className="h-4 w-4" /> Add...
           </Button>
-          <div
-            title={
-              tags.length === 0
-                ? "No tags available to delete"
-                : selectedTagId === null
-                ? "Select a tag to delete"
-                : "Delete selected tag"
-            }
+          <Button
+            variant="destructive"
+            onClick={handleDeleteTag}
+            disabled={tags.length === 0 || selectedTagId === null}
           >
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDeleteTag}
-              disabled={tags.length === 0 || selectedTagId === null}
-              className="flex items-center gap-1"
-            >
-              <X className="h-4 w-4" />
-              Delete
-            </Button>
-          </div>
+            <X className="h-4 w-4" /> Delete
+          </Button>
         </div>
 
         <div className="border rounded-md">
@@ -414,7 +345,6 @@ export function StatsTagsForm() {
           </Table>
         </div>
 
-        {/* Stats Tag Dialog for adding/editing */}
         <StatsTagDialog
           open={tagDialogOpen}
           onOpenChange={setTagDialogOpen}

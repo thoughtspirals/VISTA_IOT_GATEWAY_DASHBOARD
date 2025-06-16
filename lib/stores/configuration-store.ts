@@ -86,6 +86,18 @@ export interface StatsTag {
   description?: string;
 }
 
+export const statsTagSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Name is required"),
+  referTag: z.string().min(1, "Refer Tag is required"),
+  type: z.enum(["Average", "Max", "Min", "Sum"]),
+  updateCycleValue: z.coerce.number().min(1, "Cycle value must be at least 1"),
+  updateCycleUnit: z.enum(["sec", "min", "hour", "day"]),
+  description: z.string().optional().default(""),
+});
+
+export type StatsTagFormValues = z.infer<typeof statsTagSchema>;
+
 export interface SystemTag {
   id: string;
   name: string;
