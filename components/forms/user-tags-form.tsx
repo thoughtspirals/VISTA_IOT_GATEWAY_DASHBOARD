@@ -44,6 +44,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useConfigStore } from "@/lib/stores/configuration-store";
+import type { UserTag } from "@/lib/stores/configuration-store";
+import type { UserTagFormValues } from "@/lib/stores/configuration-store"; // if it's there too
+
 // Tag Dialog Component for both adding and editing tags
 function TagDialog({
   open,
@@ -289,46 +293,53 @@ function TagDialog({
 
 export function UserTagsForm() {
   const { toast } = useToast();
-  const [userTags, setUserTags] = useState<any[]>([]);
+  const userTags = useConfigStore((state) => state.config.user_tags || []);
+  const updateConfig = useConfigStore((state) => state.updateConfig);
+
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
-  const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
-  const [editingTag, setEditingTag] = useState<any | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [editingTag, setEditingTag] = useState<UserTag | null>(null);
 
   // Function to open dialog for adding a new tag
   const handleAddTag = () => {
-    setEditingTag(null); // Not editing, creating new
+    setEditingTag(null);
     setTagDialogOpen(true);
   };
 
-  // Function to handle double-click on a row to edit
-  const handleRowDoubleClick = (tag: any) => {
+  const handleRowDoubleClick = (tag: UserTag) => {
     setEditingTag(tag);
     setTagDialogOpen(true);
   };
 
-  // Function to save a tag (new or edited)
-  const saveTag = (tag: any, isEdit: boolean) => {
-    if (isEdit) {
-      // Update existing tag
-      setUserTags(userTags.map((t) => (t.id === tag.id ? tag : t)));
+  // Save tag (add or update)
+  const saveTag = (tag: UserTagFormValues, isEdit: boolean) => {
+    if (isEdit && tag.id) {
+      const updatedTags = userTags.map((t) =>
+        t.id === tag.id ? { ...tag } : t
+      );
+      updateConfig(["user_tags"], updatedTags);
       toast({
         title: "Tag Updated",
         description: `Tag "${tag.name}" has been updated successfully.`,
       });
     } else {
-      // Add new tag
-      setUserTags([...userTags, tag]);
+      const newTag: UserTag = {
+        ...tag,
+        id: Date.now().toString(),
+      };
+      updateConfig(["user_tags"], [...userTags, newTag]);
       toast({
         title: "Tag Added",
-        description: `Tag "${tag.name}" has been added successfully.`,
+        description: `Tag "${newTag.name}" has been added successfully.`,
       });
     }
+    setTagDialogOpen(false);
   };
 
-  // Function to delete a selected tag
   const handleDeleteTag = () => {
     if (selectedTagId) {
-      setUserTags(userTags.filter((tag) => tag.id !== selectedTagId));
+      const updatedTags = userTags.filter((tag) => tag.id !== selectedTagId);
+      updateConfig(["user_tags"], updatedTags);
       setSelectedTagId(null);
       toast({
         title: "Tag Deleted",
@@ -351,11 +362,7 @@ export function UserTagsForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
-          <Button
-            type="button"
-            onClick={handleAddTag}
-            className="flex items-center gap-1"
-          >
+          <Button onClick={handleAddTag} className="flex items-center gap-1">
             <Plus className="h-4 w-4" />
             Add
           </Button>
@@ -365,7 +372,6 @@ export function UserTagsForm() {
               <TooltipTrigger asChild>
                 <span>
                   <Button
-                    type="button"
                     variant="outline"
                     onClick={handleDeleteTag}
                     className="flex items-center gap-1"
@@ -383,7 +389,6 @@ export function UserTagsForm() {
               )}
             </Tooltip>
           </TooltipProvider>
-          {/* Modify button removed as requested - editing now happens via double-click */}
         </div>
 
         <div className="border rounded-md">
@@ -444,7 +449,6 @@ export function UserTagsForm() {
           </Table>
         </div>
 
-        {/* Tag Dialog for adding/editing */}
         <TagDialog
           open={tagDialogOpen}
           onOpenChange={setTagDialogOpen}

@@ -59,6 +59,42 @@ export interface UserTag {
   description?: string;
 }
 
+import { z } from "zod";
+
+// Zod schema for form validation
+export const userTagSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  dataType: z.enum(["Analog", "Digital"]),
+  defaultValue: z.coerce.number().default(0),
+  spanHigh: z.coerce.number().min(0).default(1),
+  spanLow: z.coerce.number().min(0).default(0),
+  readWrite: z.string().default("Read/Write"),
+  description: z.string().optional().default(""),
+});
+
+// Type for form values
+export type UserTagFormValues = z.infer<typeof userTagSchema>;
+
+export interface StatsTag {
+  id: string;
+  name: string;
+  referTag: string; // Tag being referenced
+  type: "Average" | "Max" | "Min" | "Sum"; // or string if dynamic
+  updateCycleValue: number; // Numeric value (e.g., 60)
+  updateCycleUnit: "sec" | "min" | "hour" | "day"; // Unit of time
+  description?: string;
+}
+
+export interface SystemTag {
+  id: string;
+  name: string;
+  dataType: "Analog" | "Digital";
+  unit: string;
+  spanHigh: number;
+  spanLow: number;
+  description?: string;
+}
 // Canonical DeviceConfig definition (originally from device-form.tsx)
 export interface DeviceConfig {
   id: string;
@@ -377,6 +413,8 @@ export interface ConfigSchema {
   io_setup: IOSetupConfig;
   user_tags: UserTag[];
   calculation_tags: CalculationTag[];
+  stats_tags: StatsTag[];
+  system_tags: SystemTag[];
 }
 
 // --- END: Inserted Interface Definitions ---

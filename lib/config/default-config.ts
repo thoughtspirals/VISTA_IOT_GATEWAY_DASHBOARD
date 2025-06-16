@@ -178,4 +178,6 @@ export const defaultConfig: ConfigSchema = {
 
   user_tags: [],
   calculation_tags: [],
+  stats_tags: [],
+  system_tags: [],
 };

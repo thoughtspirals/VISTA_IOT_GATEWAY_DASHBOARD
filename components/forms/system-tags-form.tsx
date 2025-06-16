@@ -1,23 +1,37 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useConfigStore } from "@/lib/stores/configuration-store";
 
 // Define the SystemTag interface
 interface SystemTag {
-  id: number
-  name: string
-  dataType: string
-  unit: string
-  spanHigh: string | number
-  spanLow: string | number
-  description: string
+  id: number;
+  name: string;
+  dataType: string;
+  unit: string;
+  spanHigh: string | number;
+  spanLow: string | number;
+  description: string;
 }
 
 export function SystemTagsForm() {
-  const [systemTags, setSystemTags] = useState<SystemTag[]>([])
+  const [systemTags, setSystemTags] = useState<SystemTag[]>([]);
 
   // Load system tags on component mount
   useEffect(() => {
@@ -31,7 +45,7 @@ export function SystemTagsForm() {
         unit: "s",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "The current uptime(s)"
+        description: "The current uptime(s)",
       },
       {
         id: 2,
@@ -40,7 +54,7 @@ export function SystemTagsForm() {
         unit: "s",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "The current system time(s)"
+        description: "The current system time(s)",
       },
       {
         id: 3,
@@ -49,7 +63,7 @@ export function SystemTagsForm() {
         unit: "Hz",
         spanHigh: "10737418240",
         spanLow: 0,
-        description: "CPU Frequency"
+        description: "CPU Frequency",
       },
       {
         id: 4,
@@ -58,7 +72,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "10737418240",
         spanLow: 0,
-        description: "Memory size(Byte)"
+        description: "Memory size(Byte)",
       },
       {
         id: 5,
@@ -67,7 +81,7 @@ export function SystemTagsForm() {
         unit: "%",
         spanHigh: 100,
         spanLow: 0,
-        description: "CPU utilization rate(%)"
+        description: "CPU utilization rate(%)",
       },
       {
         id: 6,
@@ -76,7 +90,7 @@ export function SystemTagsForm() {
         unit: "%",
         spanHigh: 100,
         spanLow: 0,
-        description: "CPU usage occupied by IOWait(%)"
+        description: "CPU usage occupied by IOWait(%)",
       },
       {
         id: 7,
@@ -85,7 +99,7 @@ export function SystemTagsForm() {
         unit: "%",
         spanHigh: 100,
         spanLow: 0,
-        description: "Memory utilization rate(%)"
+        description: "Memory utilization rate(%)",
       },
       {
         id: 8,
@@ -94,7 +108,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "System partition capacity(Byte)"
+        description: "System partition capacity(Byte)",
       },
       {
         id: 9,
@@ -103,7 +117,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "System partition free space(Byte)"
+        description: "System partition free space(Byte)",
       },
       {
         id: 10,
@@ -112,7 +126,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "Data partition capacity(Byte)"
+        description: "Data partition capacity(Byte)",
       },
       {
         id: 11,
@@ -121,7 +135,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "Data partition free space(Byte)"
+        description: "Data partition free space(Byte)",
       },
       {
         id: 12,
@@ -130,7 +144,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 255,
         spanLow: 0,
-        description: "Node ID on RTU"
+        description: "Node ID on RTU",
       },
       {
         id: 13,
@@ -139,7 +153,8 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 1,
         spanLow: 0,
-        description: "Read-only system:0-System Partition Readable and Writable, 1-System Partition Read-Only"
+        description:
+          "Read-only system:0-System Partition Readable and Writable, 1-System Partition Read-Only",
       },
       {
         id: 14,
@@ -148,7 +163,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 100,
         spanLow: 0,
-        description: "0 error"
+        description: "0 error",
       },
       {
         id: 15,
@@ -157,7 +172,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: "4294967295",
         spanLow: 0,
-        description: "Cellular device ip"
+        description: "Cellular device ip",
       },
       {
         id: 16,
@@ -166,7 +181,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 99999,
         spanLow: -1,
-        description: "Mobile network operator"
+        description: "Mobile network operator",
       },
       {
         id: 17,
@@ -175,7 +190,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 999,
         spanLow: -1,
-        description: "Mobile network type"
+        description: "Mobile network type",
       },
       {
         id: 18,
@@ -184,7 +199,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "Mobile data traffic"
+        description: "Mobile data traffic",
       },
       {
         id: 19,
@@ -193,7 +208,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: "99999999999999",
         spanLow: 0,
-        description: "Mobile phone number"
+        description: "Mobile phone number",
       },
       {
         id: 20,
@@ -202,7 +217,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 100,
         spanLow: 0,
-        description: "Signal quality of mobile network"
+        description: "Signal quality of mobile network",
       },
       // Add more system tags as needed from the images
       {
@@ -212,7 +227,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 1000,
         spanLow: 0,
-        description: "Received Signal Strength Indication"
+        description: "Received Signal Strength Indication",
       },
       {
         id: 22,
@@ -221,7 +236,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 999,
         spanLow: -1,
-        description: "Mobile Country Code, MCC"
+        description: "Mobile Country Code, MCC",
       },
       {
         id: 23,
@@ -230,7 +245,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: 999,
         spanLow: -1,
-        description: "Mobile Network Code, MNC"
+        description: "Mobile Network Code, MNC",
       },
       {
         id: 24,
@@ -239,7 +254,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: "4294967295",
         spanLow: 0,
-        description: "Location Area Code, LAC"
+        description: "Location Area Code, LAC",
       },
       {
         id: 25,
@@ -248,7 +263,7 @@ export function SystemTagsForm() {
         unit: "",
         spanHigh: "4294967295",
         spanLow: 0,
-        description: "Cell Tower ID, CId"
+        description: "Cell Tower ID, CId",
       },
       {
         id: 26,
@@ -257,7 +272,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "99999999999999",
         spanLow: 0,
-        description: "IMEI, International Mobile Subscriber Identity"
+        description: "IMEI, International Mobile Subscriber Identity",
       },
       {
         id: 27,
@@ -266,7 +281,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "99999999999999",
         spanLow: 0,
-        description: "IMEI, International Mobile Equipment Identity"
+        description: "IMEI, International Mobile Equipment Identity",
       },
       {
         id: 28,
@@ -275,7 +290,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "99999999999999",
         spanLow: 0,
-        description: "IMEI raw data"
+        description: "IMEI raw data",
       },
       {
         id: 29,
@@ -284,7 +299,7 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "4294967295",
         spanLow: 0,
-        description: "mobile modem, usb vendor id, product id"
+        description: "mobile modem, usb vendor id, product id",
       },
       {
         id: 30,
@@ -293,18 +308,22 @@ export function SystemTagsForm() {
         unit: "Byte",
         spanHigh: "281474976710655",
         spanLow: 0,
-        description: "Cellular data, current day used traffic"
-      }
-    ]
+        description: "Cellular data, current day used traffic",
+      },
+    ];
 
-    setSystemTags(tags)
-  }, [])
+    setSystemTags(tags);
+    // Add to global config store
+    useConfigStore.getState().updateConfig(["system_tags"], tags);
+  }, []);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>System Tags</CardTitle>
-        <CardDescription>View system-defined tags and their properties</CardDescription>
+        <CardDescription>
+          View system-defined tags and their properties
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[600px]">
@@ -322,14 +341,20 @@ export function SystemTagsForm() {
             </TableHeader>
             <TableBody>
               {systemTags.map((tag, index) => (
-                <TableRow key={tag.id} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                <TableRow
+                  key={tag.id}
+                  className={index % 2 === 0 ? "bg-muted/50" : ""}
+                >
                   <TableCell>{tag.id}</TableCell>
                   <TableCell>{tag.name}</TableCell>
                   <TableCell>{tag.dataType}</TableCell>
                   <TableCell>{tag.unit}</TableCell>
                   <TableCell>{tag.spanHigh}</TableCell>
                   <TableCell>{tag.spanLow}</TableCell>
-                  <TableCell className="max-w-[300px] truncate" title={tag.description}>
+                  <TableCell
+                    className="max-w-[300px] truncate"
+                    title={tag.description}
+                  >
                     {tag.description}
                   </TableCell>
                 </TableRow>
@@ -339,5 +364,5 @@ export function SystemTagsForm() {
         </ScrollArea>
       </CardContent>
     </Card>
-  )
+  );
 }
