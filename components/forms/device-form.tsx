@@ -17,7 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { useConfigStore } from "@/lib/stores/configuration-store";
 import type { IOPortConfig } from "./io-tag-form"; // Assuming IOPortConfig is exported from there
-import type { IOTag } from "./io-tag-detail"; // Import the definitive IOTag interface
+import type { IOTag } from "@/lib/stores/configuration-store";
+
 import { AlertCircle } from "lucide-react";
 import { z } from "zod";
 
@@ -215,6 +216,7 @@ export function DeviceForm({
 
     const updatedAllPorts = [...allPorts];
     updatedAllPorts[targetPortIndex] = targetPort;
+    console.log("Ports being saved:", updatedAllPorts);
 
     updateConfig(["io_setup", "ports"], updatedAllPorts);
 

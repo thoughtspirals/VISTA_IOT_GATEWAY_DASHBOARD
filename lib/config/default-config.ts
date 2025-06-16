@@ -1,4 +1,4 @@
-import type { ConfigSchema } from '../stores/configuration-store';
+import type { ConfigSchema } from "../stores/configuration-store";
 
 export const defaultConfig: ConfigSchema = {
   device: {
@@ -6,7 +6,7 @@ export const defaultConfig: ConfigSchema = {
     model: "IoT-GW-5000",
     version: "2.1.0",
     location: "",
-    description: ""
+    description: "",
   },
   network: {
     interfaces: {
@@ -16,20 +16,20 @@ export const defaultConfig: ConfigSchema = {
         mode: "dhcp",
         link: {
           speed: "auto",
-          duplex: "auto"
+          duplex: "auto",
         },
         ipv4: {
           mode: "dhcp",
           static: {
             address: "",
             netmask: "",
-            gateway: ""
+            gateway: "",
           },
           dns: {
             primary: "",
-            secondary: ""
-          }
-        }
+            secondary: "",
+          },
+        },
       },
       wlan0: {
         type: "wireless",
@@ -39,27 +39,27 @@ export const defaultConfig: ConfigSchema = {
           ssid: "",
           security: {
             mode: "wpa2",
-            password: ""
+            password: "",
           },
           channel: "auto",
           band: "2.4",
-          hidden: false
+          hidden: false,
         },
         ipv4: {
           mode: "dhcp",
           static: {
             address: "",
             netmask: "",
-            gateway: ""
-          }
-        }
-      }
+            gateway: "",
+          },
+        },
+      },
     },
     firewall: {
       enabled: true,
       default_policy: "drop",
-      rules: []
-    }
+      rules: [],
+    },
   },
   protocols: {
     modbus: {
@@ -68,17 +68,17 @@ export const defaultConfig: ConfigSchema = {
       tcp: {
         port: 502,
         max_connections: 5,
-        timeout: 30
+        timeout: 30,
       },
       serial: {
         port: "ttyS0",
         baudrate: 9600,
         data_bits: 8,
         parity: "none",
-        stop_bits: 1
+        stop_bits: 1,
       },
       slave_id: 1,
-      mapping: []
+      mapping: [],
     },
     mqtt: {
       enabled: false,
@@ -95,19 +95,19 @@ export const defaultConfig: ConfigSchema = {
           allow_insecure: false,
           cert_file: "",
           key_file: "",
-          ca_file: ""
+          ca_file: "",
         },
         auth: {
           enabled: false,
           username: "",
-          password: ""
-        }
+          password: "",
+        },
       },
       topics: {
         publish: [],
-        subscribe: []
-      }
-    }
+        subscribe: [],
+      },
+    },
   },
   hardware: {
     com_ports: {
@@ -117,7 +117,7 @@ export const defaultConfig: ConfigSchema = {
         data_bits: 8,
         parity: "none",
         stop_bits: 1,
-        flow_control: "none"
+        flow_control: "none",
       },
       com2: {
         mode: "rs485",
@@ -125,29 +125,29 @@ export const defaultConfig: ConfigSchema = {
         data_bits: 8,
         parity: "none",
         stop_bits: 1,
-        flow_control: "none"
-      }
+        flow_control: "none",
+      },
     },
     watchdog: {
       enabled: false,
       timeout: 30,
       action: "restart",
-      custom_command: ""
+      custom_command: "",
     },
     gpio: {
       inputs: [],
-      outputs: []
-    }
+      outputs: [],
+    },
   },
   security: {
     ssh: {
       enabled: true,
       port: 22,
       allow_root: false,
-      password_auth: false
+      password_auth: false,
     },
     users: [],
-    certificates: []
+    certificates: [],
   },
   logging: {
     level: "info",
@@ -156,23 +156,26 @@ export const defaultConfig: ConfigSchema = {
     remote_syslog: {
       enabled: false,
       server: "",
-      port: 514
-    }
+      port: 514,
+    },
   },
   maintenance: {
     auto_update: {
       enabled: false,
       schedule: "0 0 * * 0",
-      channel: "stable"
+      channel: "stable",
     },
     backup: {
       enabled: false,
       schedule: "0 0 * * *",
       retain: 7,
-      location: "local"
-    }
+      location: "local",
+    },
   },
   io_setup: {
-    ports: []
-  }
-} 
+    ports: [],
+  },
+
+  user_tags: [],
+  calculation_tags: [],
+};

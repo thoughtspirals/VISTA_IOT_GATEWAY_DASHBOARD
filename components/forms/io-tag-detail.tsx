@@ -58,7 +58,7 @@ import {
   type ConfigState,
 } from "@/lib/stores/configuration-store";
 import type { IOPortConfig } from "./io-tag-form";
-import type { DeviceConfig } from "./device-form";
+// import type { DeviceConfig } from "./device-form";
 // IOTag interface is defined and exported in this file, no need for self-import.
 
 const CONVERSION_OPTIONS = [
@@ -92,33 +92,7 @@ const CONVERSION_OPTIONS = [
   { value: "INT, Text to Number", defaultLength: 16 },
 ];
 
-export interface IOTag {
-  id: string;
-  name: string;
-  dataType: string;
-  registerType?: string;
-  address: string;
-  description: string;
-  source?: string;
-  defaultValue?: string | number;
-  scanRate?: number;
-  conversionType?: string;
-  scaleType?: string;
-  readWrite?: string;
-  startBit?: number;
-  lengthBit?: number;
-  spanLow?: number;
-  spanHigh?: number;
-  formula?: string;
-  scale?: number;
-  offset?: number;
-  clampToLow?: boolean;
-  clampToHigh?: boolean;
-  clampToZero?: boolean;
-  signalReversal?: boolean;
-  value0?: string;
-  value1?: string;
-}
+import type { DeviceConfig, IOTag } from "@/lib/stores/configuration-store";
 
 interface IOTagDetailProps {
   device: DeviceConfig;
@@ -589,6 +563,31 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!name.trim()) {
+      alert("Name is required.");
+      return;
+    }
+
+    if (!dataType) {
+      alert("Data Type is required.");
+      return;
+    }
+
+    if (!registerType) {
+      alert("Register Type is required.");
+      return;
+    }
+
+    if (dataType === "Analog" && !conversion) {
+      alert("Conversion Type is required for Analog tags.");
+      return;
+    }
+
+    if (!address.trim()) {
+      alert("Address is required.");
+      return;
+    }
+
     const newTag: IOTag = {
       id: existingTag?.id || `tag-${Date.now()}`,
       name,
@@ -597,7 +596,7 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
       conversionType: conversion,
       address,
       startBit,
-      lengthBit: dataType === "Discrete" ? 1 : lengthBit, // Set lengthBit to 1 if Discrete
+      lengthBit: dataType === "Discrete" ? 1 : lengthBit,
       spanLow,
       spanHigh,
       defaultValue,
@@ -611,13 +610,12 @@ function TagForm({ onSave, onCancel, existingTag }: TagFormProps) {
       clampToLow,
       clampToHigh,
       clampToZero,
-      // Add new discrete fields
       signalReversal: dataType === "Discrete" ? signalReversal : undefined,
       value0: dataType === "Discrete" ? value0 : undefined,
       value1: dataType === "Discrete" ? value1 : undefined,
     };
 
-    onSave(newTag);
+    onSave(newTag); // make sure onSave is defined in props
   };
 
   return (

@@ -51,6 +51,7 @@ import {
 // Type definitions
 // Import the z schema from the form component to ensure type compatibility
 import { z } from "zod";
+import { useConfigStore } from "@/lib/stores/configuration-store";
 
 // Define the form schema to match the CalculationTagForm component
 const calculationTagSchema = z.object({
@@ -76,11 +77,7 @@ const calculationTagSchema = z.object({
 // Define the type from the schema
 type CalculationTagFormValues = z.infer<typeof calculationTagSchema>;
 
-// Extend the form values with additional fields for the component
-interface CalculationTag extends CalculationTagFormValues {
-  id: string;
-  children?: CalculationTag[];
-}
+import type { CalculationTag } from "@/lib/stores/configuration-store";
 
 interface CalculationTagTabProps {
   // Any props needed
@@ -89,7 +86,10 @@ interface CalculationTagTabProps {
 
 export default function CalculationTagTab({}: CalculationTagTabProps) {
   const { toast } = useToast();
-  const [calculationTags, setCalculationTags] = useState<CalculationTag[]>([]);
+  const calculationTags = useConfigStore(
+    (state) => state.config.calculation_tags || []
+  );
+  const updateConfig = useConfigStore((state) => state.updateConfig);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTag, setEditingTag] = useState<CalculationTag | null>(null);
@@ -104,8 +104,11 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
     const newTag: CalculationTag = {
       ...formValues,
       id: Date.now().toString(),
+      defaultValue: formValues.defaultValue as number | string,
     };
-    setCalculationTags([...calculationTags, newTag]);
+
+    updateConfig(["calculation_tags"], [...calculationTags, newTag]);
+
     setShowAddForm(false);
     toast({
       title: "Tag Added",
@@ -123,9 +126,11 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
       children: editingTag.children,
     };
 
-    setCalculationTags(
+    updateConfig(
+      ["calculation_tags"],
       calculationTags.map((t) => (t.id === updatedTag.id ? updatedTag : t))
     );
+
     setEditingTag(null);
     toast({
       title: "Tag Updated",
@@ -136,10 +141,14 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
   // Handle delete calculation tag
   const handleDeleteTag = () => {
     if (deleteDialog.tag) {
-      setCalculationTags(
-        calculationTags.filter((t) => t.id !== deleteDialog.tag?.id)
+      const updatedTags = calculationTags.filter(
+        (t) => t.id !== deleteDialog.tag?.id
       );
+
+      updateConfig(["calculation_tags"], updatedTags);
+
       setDeleteDialog({ isOpen: false, tag: null });
+
       toast({
         title: "Tag Deleted",
         description: `Calculation tag has been deleted successfully.`,
@@ -154,7 +163,7 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
       const temp = newTags[index];
       newTags[index] = newTags[index - 1];
       newTags[index - 1] = temp;
-      setCalculationTags(newTags);
+      updateConfig(["calculation_tags"], newTags);
     }
   };
 
@@ -165,7 +174,7 @@ export default function CalculationTagTab({}: CalculationTagTabProps) {
       const temp = newTags[index];
       newTags[index] = newTags[index + 1];
       newTags[index + 1] = temp;
-      setCalculationTags(newTags);
+      updateConfig(["calculation_tags"], newTags);
     }
   };
 

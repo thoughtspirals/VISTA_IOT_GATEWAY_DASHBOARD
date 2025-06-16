@@ -114,13 +114,7 @@ export interface Port {
   serialSettings?: any;
 }
 
-export interface IOTag {
-  id: string;
-  name: string;
-  dataType: string;
-  address: string;
-  description: string;
-}
+import type { IOTag } from "@/lib/stores/configuration-store";
 
 export interface IOTagManagementProps {
   ioPorts: Port[];

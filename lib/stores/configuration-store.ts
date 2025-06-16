@@ -1,7 +1,7 @@
-import { create } from 'zustand'
-import YAML from 'yaml'
+import { create } from "zustand";
+import YAML from "yaml";
 // defaultConfig will be typed with ConfigSchema in its own file later
-import { defaultConfig } from '@/lib/config/default-config'
+import { defaultConfig } from "@/lib/config/default-config";
 
 // --- BEGIN: Inserted Interface Definitions ---
 
@@ -32,6 +32,31 @@ export interface IOTag {
   signalReversal?: boolean;
   value0?: string;
   value1?: string;
+}
+
+export interface CalculationTag extends IOTag {
+  formula: string;
+  a?: string;
+  b?: string;
+  c?: string;
+  d?: string;
+  e?: string;
+  f?: string;
+  g?: string;
+  h?: string;
+  period?: number;
+  isParent?: boolean;
+}
+
+export interface UserTag {
+  id: string;
+  name: string;
+  dataType: string; // e.g., "Analog", "Digital"
+  defaultValue: number;
+  spanHigh: number;
+  spanLow: number;
+  readWrite: string; // e.g., "Read", "Write", "Read/Write"
+  description?: string;
 }
 
 // Canonical DeviceConfig definition (originally from device-form.tsx)
@@ -263,8 +288,14 @@ interface WatchdogConfig {
   custom_command: string;
 }
 
-interface GPIOInput { id?: string; state?: boolean; }
-interface GPIOOutput { id?: string; state?: boolean; }
+interface GPIOInput {
+  id?: string;
+  state?: boolean;
+}
+interface GPIOOutput {
+  id?: string;
+  state?: boolean;
+}
 
 interface GPIOConfig {
   inputs: GPIOInput[];
@@ -284,8 +315,14 @@ interface SSHConfig {
   password_auth: boolean;
 }
 
-interface UserConfig { id?: string; username: string; }
-interface CertificateConfig { id?: string; name: string; }
+interface UserConfig {
+  id?: string;
+  username: string;
+}
+interface CertificateConfig {
+  id?: string;
+  name: string;
+}
 
 interface SecurityConfig {
   ssh: SSHConfig;
@@ -338,6 +375,8 @@ export interface ConfigSchema {
   logging: LoggingConfig;
   maintenance: MaintenanceConfig;
   io_setup: IOSetupConfig;
+  user_tags: UserTag[];
+  calculation_tags: CalculationTag[];
 }
 
 // --- END: Inserted Interface Definitions ---
@@ -362,45 +401,50 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   isDirty: false,
 
   updateConfig: (path: string[], value: any) => {
-    set(state => {
+    set((state) => {
       // Use a deep copy for state updates to avoid direct mutation issues.
       // JSON.parse(JSON.stringify(...)) is a common simple deep copy method.
-      const newConfig = JSON.parse(JSON.stringify(state.config)) as ConfigSchema;
+      const newConfig = JSON.parse(
+        JSON.stringify(state.config)
+      ) as ConfigSchema;
       let current: any = newConfig; // Use 'any' for dynamic path navigation
-      
+
       for (let i = 0; i < path.length - 1; i++) {
-        if (current[path[i]] === undefined || typeof current[path[i]] !== 'object') {
+        if (
+          current[path[i]] === undefined ||
+          typeof current[path[i]] !== "object"
+        ) {
           current[path[i]] = {}; // Create path if it doesn't exist or isn't an object
         }
         current = current[path[i]];
       }
-      
+
       if (path.length > 0) {
         current[path[path.length - 1]] = value;
       } else {
         // If path is empty, replace the entire config.
         // Ensure 'value' conforms to ConfigSchema if this case is used.
-        return { 
+        return {
           config: value as ConfigSchema, // Assert value conforms
           lastUpdated: new Date().toISOString(),
-          isDirty: true 
+          isDirty: true,
         };
       }
-      
-      return { 
+
+      return {
         config: newConfig,
         lastUpdated: new Date().toISOString(),
-        isDirty: true 
+        isDirty: true,
       };
     });
   },
 
   resetConfig: () => {
-    set({ 
+    set({
       // Ensure defaultConfig is treated as ConfigSchema upon reset
-      config: JSON.parse(JSON.stringify(defaultConfig)) as ConfigSchema, 
+      config: JSON.parse(JSON.stringify(defaultConfig)) as ConfigSchema,
       lastUpdated: new Date().toISOString(),
-      isDirty: true 
+      isDirty: true,
     });
   },
 
@@ -418,5 +462,5 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
 
   getConfig: () => {
     return get().config; // This now correctly returns ConfigSchema
-  }
+  },
 }));
