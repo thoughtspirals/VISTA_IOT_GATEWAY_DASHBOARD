@@ -478,7 +478,7 @@ export default function TagSelectionDialog({
                               <TableCell>
                                 <Button
                                   size="sm"
-                                  onClick={() => onSelectTag(tag)}
+                                  onClick={() => handleSelectTag(tag)}
                                 >
                                   Select
                                 </Button>
@@ -522,7 +522,7 @@ export default function TagSelectionDialog({
                               <TableCell>
                                 <Button
                                   size="sm"
-                                  onClick={() => onSelectTag(tag)}
+                                  onClick={() => handleSelectTag(tag)}
                                 >
                                   Select
                                 </Button>
@@ -568,7 +568,7 @@ export default function TagSelectionDialog({
                               <TableCell>
                                 <Button
                                   size="sm"
-                                  onClick={() => onSelectTag(tag)}
+                                  onClick={() => handleSelectTag(tag)}
                                 >
                                   Select
                                 </Button>
@@ -612,7 +612,7 @@ export default function TagSelectionDialog({
                               <TableCell>
                                 <Button
                                   size="sm"
-                                  onClick={() => onSelectTag(tag)}
+                                  onClick={() => handleSelectTag(tag)}
                                 >
                                   Select
                                 </Button>
