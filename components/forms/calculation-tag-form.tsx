@@ -185,6 +185,10 @@ export function CalculationTagForm({
     });
   };
 
+  const [activeCategory, setActiveCategory] = useState<
+    "io" | "user" | "calc" | "stats" | "system"
+  >("io");
+
   // Define the type for the form values
   type FormValues = z.infer<typeof calculationTagSchema>;
 
@@ -1051,23 +1055,58 @@ export function CalculationTagForm({
                   </CardHeader>
                   <CardContent className="py-0">
                     <div className="space-y-1">
-                      <div className="flex items-center px-2 py-1.5 rounded-md bg-primary text-primary-foreground text-sm">
+                      <div
+                        className={`flex items-center px-2 py-1.5 rounded-md text-sm cursor-pointer ${
+                          activeCategory === "io"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        onClick={() => setActiveCategory("io")}
+                      >
                         <Tag className="h-4 w-4 mr-2" />
                         IO Tags
                       </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
+                      <div
+                        className={`flex items-center px-2 py-1.5 rounded-md text-sm cursor-pointer ${
+                          activeCategory === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        onClick={() => setActiveCategory("user")}
+                      >
                         <UserCircle className="h-4 w-4 mr-2" />
                         User Tags
                       </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
+                      <div
+                        className={`flex items-center px-2 py-1.5 rounded-md text-sm cursor-pointer ${
+                          activeCategory === "calc"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        onClick={() => setActiveCategory("calc")}
+                      >
                         <FileDigit className="h-4 w-4 mr-2" />
                         Calculation Tags
                       </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
+                      <div
+                        className={`flex items-center px-2 py-1.5 rounded-md text-sm cursor-pointer ${
+                          activeCategory === "stats"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        onClick={() => setActiveCategory("stats")}
+                      >
                         <BarChart className="h-4 w-4 mr-2" />
                         Stats Tags
                       </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
+                      <div
+                        className={`flex items-center px-2 py-1.5 rounded-md text-sm cursor-pointer ${
+                          activeCategory === "system"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted"
+                        }`}
+                        onClick={() => setActiveCategory("system")}
+                      >
                         <Cog className="h-4 w-4 mr-2" />
                         System Tags
                       </div>
@@ -1078,110 +1117,123 @@ export function CalculationTagForm({
                 <Card className="sm:col-span-4 h-auto overflow-auto">
                   <CardHeader className="py-3">
                     <CardTitle className="text-sm font-medium">
-                      IO Tags
+                      {activeCategory === "io" && "IO Tags"}
+                      {activeCategory === "user" && "User Tags"}
+                      {activeCategory === "calc" && "Calculation Tags"}
+                      {activeCategory === "stats" && "Stats Tags"}
+                      {activeCategory === "system" && "System Tags"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="py-0">
-                    <div className="space-y-2">
-                      {ioPorts.map((port) => (
-                        <div key={port.id} className="border rounded-md">
-                          <div
-                            className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                            onClick={() => togglePortExpansion(port.id)}
-                          >
-                            {expandedPorts.includes(port.id) ? (
-                              <ChevronDown className="h-4 w-4 mr-1" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4 mr-1" />
-                            )}
-                            <Server className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span className="font-medium">{port.name}</span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({port.type})
-                            </span>
-                          </div>
-
-                          {expandedPorts.includes(port.id) && (
-                            <div className="pl-4 pr-2 pb-2 space-y-2">
-                              {port.devices.map((device) => (
-                                <div
-                                  key={device.id}
-                                  className="border rounded-md"
-                                >
-                                  <div
-                                    className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                                    onClick={() =>
-                                      toggleDeviceExpansion(device.id)
-                                    }
-                                  >
-                                    {expandedDevices.includes(device.id) ? (
-                                      <ChevronDown className="h-4 w-4 mr-1" />
-                                    ) : (
-                                      <ChevronRight className="h-4 w-4 mr-1" />
-                                    )}
-                                    <Cpu className="h-4 w-4 mr-2 text-muted-foreground" />
-                                    <span className="font-medium">
-                                      {device.name}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground ml-2">
-                                      ({device.type})
-                                    </span>
-                                  </div>
-
-                                  {expandedDevices.includes(device.id) && (
-                                    <div className="pl-4 pr-2 pb-2 overflow-x-auto">
-                                      <Table className="min-w-[400px]">
-                                        <TableHeader>
-                                          <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Data Type</TableHead>
-                                            <TableHead>Address</TableHead>
-                                            <TableHead></TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {device.tags?.map((tag) => (
-                                            <TableRow key={tag.id}>
-                                              <TableCell className="whitespace-nowrap">
-                                                {tag.name}
-                                              </TableCell>
-                                              <TableCell className="whitespace-nowrap">
-                                                {tag.dataType}
-                                              </TableCell>
-                                              <TableCell className="whitespace-nowrap">
-                                                {tag.address}
-                                              </TableCell>
-                                              <TableCell>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  onClick={() => {
-                                                    form.setValue(
-                                                      tagSelectionDialog.targetVariable,
-                                                      `${device.name}:${tag.name}`
-                                                    );
-                                                    setTagSelectionDialog({
-                                                      isOpen: false,
-                                                      targetVariable: "",
-                                                    });
-                                                  }}
-                                                >
-                                                  Select
-                                                </Button>
-                                              </TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
+                    {activeCategory === "io" && (
+                      <div className="space-y-2">
+                        {ioPorts.map((port) => (
+                          <div key={port.id} className="border rounded-md">
+                            <div
+                              className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
+                              onClick={() => togglePortExpansion(port.id)}
+                            >
+                              {expandedPorts.includes(port.id) ? (
+                                <ChevronDown className="h-4 w-4 mr-1" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 mr-1" />
+                              )}
+                              <Server className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <span className="font-medium">{port.name}</span>
+                              <span className="text-xs text-muted-foreground ml-2">
+                                ({port.type})
+                              </span>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+
+                            {expandedPorts.includes(port.id) && (
+                              <div className="pl-4 pr-2 pb-2 space-y-2">
+                                {port.devices.map((device) => (
+                                  <div
+                                    key={device.id}
+                                    className="border rounded-md"
+                                  >
+                                    <div
+                                      className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
+                                      onClick={() =>
+                                        toggleDeviceExpansion(device.id)
+                                      }
+                                    >
+                                      {expandedDevices.includes(device.id) ? (
+                                        <ChevronDown className="h-4 w-4 mr-1" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4 mr-1" />
+                                      )}
+                                      <Cpu className="h-4 w-4 mr-2 text-muted-foreground" />
+                                      <span className="font-medium">
+                                        {device.name}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        ({device.type})
+                                      </span>
+                                    </div>
+
+                                    {expandedDevices.includes(device.id) && (
+                                      <div className="pl-4 pr-2 pb-2 overflow-x-auto">
+                                        <Table className="min-w-[400px]">
+                                          <TableHeader>
+                                            <TableRow>
+                                              <TableHead>Name</TableHead>
+                                              <TableHead>Data Type</TableHead>
+                                              <TableHead>Address</TableHead>
+                                              <TableHead></TableHead>
+                                            </TableRow>
+                                          </TableHeader>
+                                          <TableBody>
+                                            {device.tags?.map((tag) => (
+                                              <TableRow key={tag.id}>
+                                                <TableCell className="whitespace-nowrap">
+                                                  {tag.name}
+                                                </TableCell>
+                                                <TableCell className="whitespace-nowrap">
+                                                  {tag.dataType}
+                                                </TableCell>
+                                                <TableCell className="whitespace-nowrap">
+                                                  {tag.address}
+                                                </TableCell>
+                                                <TableCell>
+                                                  <Button
+                                                    variant="default"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                      form.setValue(
+                                                        tagSelectionDialog.targetVariable,
+                                                        `${device.name}:${tag.name}`
+                                                      );
+                                                      setTagSelectionDialog({
+                                                        isOpen: false,
+                                                        targetVariable: "",
+                                                      });
+                                                    }}
+                                                  >
+                                                    Select
+                                                  </Button>
+                                                </TableCell>
+                                              </TableRow>
+                                            ))}
+                                          </TableBody>
+                                        </Table>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Empty placeholders for other categories */}
+                    {activeCategory !== "io" && (
+                      <div className="text-muted-foreground text-sm italic">
+                        No tags available for this category yet.
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
