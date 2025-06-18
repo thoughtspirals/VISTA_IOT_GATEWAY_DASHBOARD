@@ -91,6 +91,8 @@ interface TagSelectionDialogProps {
   onOpenChange: (open: boolean) => void;
   onSelectTag: (tag: Tag) => void;
 }
+import type { ConfigSchema } from "@/lib/stores/configuration-store"; // adjust the path as needed
+import { useConfigStore } from "@/lib/stores/configuration-store";
 
 export default function TagSelectionDialog({
   open,
@@ -99,15 +101,14 @@ export default function TagSelectionDialog({
 }: TagSelectionDialogProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [ioPorts, setIoPorts] = useState<Port[]>([]);
-  const [userTags, setUserTags] = useState<Tag[]>([]);
-  const [calculationTags, setCalculationTags] = useState<Tag[]>([]);
-  const [systemTags, setSystemTags] = useState<Tag[]>([]);
-  const [statsTags, setStatsTags] = useState<Tag[]>([]);
 
   // Track expanded items in the tree
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
     {}
   );
+  const { config } = useConfigStore();
+
+  const { user_tags, stats_tags, calculation_tags, system_tags } = config;
 
   // Track selected port, device, and tag
   const [selectedPort, setSelectedPort] = useState<string | null>(null);
@@ -157,42 +158,6 @@ export default function TagSelectionDialog({
 
           // Set IO Tag category as expanded by default
           setExpandedItems((prev) => ({ ...prev, "io-tag": true }));
-        }
-
-        // Load user tags from localStorage if available
-        const userTagsData = localStorage.getItem("user_tags_data");
-        if (userTagsData) {
-          try {
-            const parsedUserTags = JSON.parse(userTagsData);
-            const formattedUserTags = parsedUserTags.map((tag: any) => ({
-              id: tag.id,
-              name: tag.name,
-              type: "User",
-              value: tag.value || "",
-              description: tag.description || "",
-            }));
-            setUserTags(formattedUserTags);
-          } catch (e) {
-            console.error("Error parsing user tags:", e);
-          }
-        }
-
-        // Load stats tags from localStorage if available
-        const statsTagsData = localStorage.getItem("stats_tags_data");
-        if (statsTagsData) {
-          try {
-            const parsedStatsTags = JSON.parse(statsTagsData);
-            const formattedStatsTags = parsedStatsTags.map((tag: any) => ({
-              id: tag.id,
-              name: tag.name,
-              type: tag.type,
-              value: tag.referTag || "",
-              description: tag.description || "",
-            }));
-            setStatsTags(formattedStatsTags);
-          } catch (e) {
-            console.error("Error parsing stats tags:", e);
-          }
         }
       } catch (error) {
         console.error("Error loading data from localStorage:", error);
@@ -271,6 +236,7 @@ export default function TagSelectionDialog({
   // Render a tree item with toggle functionality
   const renderTreeItem = (
     id: string,
+
     name: string,
     icon: React.ReactNode,
     depth: number = 0,
@@ -291,8 +257,9 @@ export default function TagSelectionDialog({
         }`}
         style={{ paddingLeft }}
         onClick={() => {
+          setSelectedCategory(id); // Select the category
           if (hasChildren) {
-            toggleExpanded(id);
+            toggleExpanded(id); // Only expand if applicable (IO Tag)
           }
         }}
       >
@@ -420,7 +387,6 @@ export default function TagSelectionDialog({
               <div className="p-4">
                 {selectedCategory === "io-tag" && selectedDevice ? (
                   <>
-                    {/* Show device name as header */}
                     {ioPorts.map((port) => {
                       if (port.devices) {
                         const device = port.devices.find(
@@ -432,8 +398,6 @@ export default function TagSelectionDialog({
                               <h3 className="text-lg font-semibold mb-2">
                                 {device.name}
                               </h3>
-
-                              {/* Show tags in a table */}
                               <Table>
                                 <TableHeader>
                                   <TableRow>
@@ -481,11 +445,187 @@ export default function TagSelectionDialog({
                       return null;
                     })}
                   </>
+                ) : selectedCategory === "user-tag" ? (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2">User Tags</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {user_tags.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center py-4 text-muted-foreground"
+                            >
+                              No user tags available
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          user_tags.map((tag) => (
+                            <TableRow key={tag.id}>
+                              <TableCell>{tag.name}</TableCell>
+                              {/* <TableCell>{tag.type}</TableCell>
+                              <TableCell>{tag.value}</TableCell> */}
+                              <TableCell>{tag.description}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  onClick={() => onSelectTag(tag)}
+                                >
+                                  Select
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </>
+                ) : selectedCategory === "stats-tag" ? (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2">Stats Tags</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Refer Tag</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {stats_tags.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center py-4 text-muted-foreground"
+                            >
+                              No stats tags available
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          stats_tags.map((tag) => (
+                            <TableRow key={tag.id}>
+                              <TableCell>{tag.name}</TableCell>
+                              <TableCell>{tag.type}</TableCell>
+                              {/* <TableCell>{tag.value}</TableCell> */}
+                              <TableCell>{tag.description}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  onClick={() => onSelectTag(tag)}
+                                >
+                                  Select
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </>
+                ) : selectedCategory === "calculation-tag" ? (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2">
+                      Calculation Tags
+                    </h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Formula</TableHead>
+                          <TableHead>Output Type</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {calculation_tags.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center py-4 text-muted-foreground"
+                            >
+                              No calculation tags available
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          calculation_tags.map((tag) => (
+                            <TableRow key={tag.id}>
+                              <TableCell>{tag.name}</TableCell>
+                              <TableCell>{tag.formula}</TableCell>
+                              {/* <TableCell>{tag.type}</TableCell> */}
+                              <TableCell>{tag.description}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  onClick={() => onSelectTag(tag)}
+                                >
+                                  Select
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </>
+                ) : selectedCategory === "system-tag" ? (
+                  <>
+                    <h3 className="text-lg font-semibold mb-2">System Tags</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {system_tags.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center py-4 text-muted-foreground"
+                            >
+                              No system tags available
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          system_tags.map((tag) => (
+                            <TableRow key={tag.id}>
+                              <TableCell>{tag.name}</TableCell>
+                              {/* <TableCell>{tag.type}</TableCell>
+                              <TableCell>{tag.value}</TableCell> */}
+                              <TableCell>{tag.description}</TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  onClick={() => onSelectTag(tag)}
+                                >
+                                  Select
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    {selectedCategory === "io-tag"
-                      ? "Select a device to view available tags"
-                      : "Select a category to view available tags"}
+                    Select a category to view available tags
                   </div>
                 )}
               </div>

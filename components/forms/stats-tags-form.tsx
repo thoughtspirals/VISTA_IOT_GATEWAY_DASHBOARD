@@ -58,6 +58,13 @@ function StatsTagDialog({
   const [description, setDescription] = useState("");
   const [tagSelectionDialogOpen, setTagSelectionDialogOpen] = useState(false);
 
+  const userTags = useConfigStore((state) => state.config.user_tags);
+  const calculationTags = useConfigStore(
+    (state) => state.config.calculation_tags
+  );
+  const statsTags = useConfigStore((state) => state.config.stats_tags);
+  const systemTags = useConfigStore((state) => state.config.system_tags);
+
   useEffect(() => {
     if (open) {
       if (editTag) {
@@ -209,6 +216,10 @@ function StatsTagDialog({
           open={tagSelectionDialogOpen}
           onOpenChange={setTagSelectionDialogOpen}
           onSelectTag={handleTagSelection}
+          userTags={userTags}
+          calculationTags={calculationTags}
+          statsTags={statsTags}
+          systemTags={systemTags}
         />
       </DialogContent>
     </Dialog>
