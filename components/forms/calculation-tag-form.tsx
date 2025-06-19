@@ -53,7 +53,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog";
-
+import type { ConfigSchema } from "@/lib/stores/configuration-store"; // adjust the path as needed
+import { useConfigStore } from "@/lib/stores/configuration-store";
 // Define the form schema
 const calculationTagSchema = z.object({
   id: z.string().optional(),
@@ -115,19 +116,18 @@ export function CalculationTagForm({
 }: CalculationTagFormProps) {
   // Initialize ioPorts as an empty array
   const [ioPorts, setIoPorts] = useState<Port[]>([]);
-  // const [tagName, setTagName] = useState("");
-  // const [tagNameError, setTagNameError] = useState("");
+
   // State for expanded items in tree
   const [expandedPorts, setExpandedPorts] = useState<string[]>([]);
   const [expandedDevices, setExpandedDevices] = useState<string[]>([]);
-
+  const { config } = useConfigStore();
   // State for tag selection dialog
   const [tagSelectionDialog, setTagSelectionDialog] = useState({
     isOpen: false,
     targetVariable: "",
   });
   const [activeTab, setActiveTab] = useState("basic");
-
+  const { user_tags, stats_tags, calculation_tags, system_tags } = config;
   // Load IO ports data from localStorage
   useEffect(() => {
     const fetchIoPorts = async () => {
@@ -216,14 +216,6 @@ export function CalculationTagForm({
     },
     mode: "onChange",
   });
-
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors },
-  // } = useForm<z.infer<typeof calculationTagSchema>>({
-  //   resolver: zodResolver(calculationTagSchema),
-  // });
 
   // Custom submit logic, called only if validation passes
 
@@ -867,7 +859,7 @@ export function CalculationTagForm({
           )}
 
           <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
-            <Button type="submit" variant="secondary">
+            <Button type="submit" variant="default">
               OK
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>
@@ -1229,9 +1221,163 @@ export function CalculationTagForm({
                     )}
 
                     {/* Empty placeholders for other categories */}
-                    {activeCategory !== "io" && (
-                      <div className="text-muted-foreground text-sm italic">
-                        No tags available for this category yet.
+                    {activeCategory === "user" && (
+                      <div className="space-y-2">
+                        {user_tags.length > 0 ? (
+                          user_tags.map((tag) => (
+                            <div
+                              key={tag.id}
+                              className="flex justify-between items-center border rounded-md p-2 hover:bg-muted/50"
+                            >
+                              <div>
+                                <div className="font-medium">{tag.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {tag.description}
+                                </div>
+                              </div>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  form.setValue(
+                                    tagSelectionDialog.targetVariable,
+                                    tag.name
+                                  );
+                                  setTagSelectionDialog({
+                                    isOpen: false,
+                                    targetVariable: "",
+                                  });
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm italic text-muted-foreground">
+                            No user tags available.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeCategory === "stats" && (
+                      <div className="space-y-2">
+                        {stats_tags.length > 0 ? (
+                          stats_tags.map((tag) => (
+                            <div
+                              key={tag.id}
+                              className="flex justify-between items-center border rounded-md p-2 hover:bg-muted/50"
+                            >
+                              <div>
+                                <div className="font-medium">{tag.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {tag.description}
+                                </div>
+                              </div>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  form.setValue(
+                                    tagSelectionDialog.targetVariable,
+                                    tag.name
+                                  );
+                                  setTagSelectionDialog({
+                                    isOpen: false,
+                                    targetVariable: "",
+                                  });
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm italic text-muted-foreground">
+                            No stats tags available.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeCategory === "calc" && (
+                      <div className="space-y-2">
+                        {calculation_tags.length > 0 ? (
+                          calculation_tags.map((tag) => (
+                            <div
+                              key={tag.id}
+                              className="flex justify-between items-center border rounded-md p-2 hover:bg-muted/50"
+                            >
+                              <div>
+                                <div className="font-medium">{tag.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {tag.description}
+                                </div>
+                              </div>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  form.setValue(
+                                    tagSelectionDialog.targetVariable,
+                                    tag.name
+                                  );
+                                  setTagSelectionDialog({
+                                    isOpen: false,
+                                    targetVariable: "",
+                                  });
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm italic text-muted-foreground">
+                            No calculation tags available.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeCategory === "system" && (
+                      <div className="space-y-2">
+                        {system_tags.length > 0 ? (
+                          system_tags.map((tag) => (
+                            <div
+                              key={tag.id}
+                              className="flex justify-between items-center border rounded-md p-2 hover:bg-muted/50"
+                            >
+                              <div>
+                                <div className="font-medium">{tag.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {tag.description}
+                                </div>
+                              </div>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  form.setValue(
+                                    tagSelectionDialog.targetVariable,
+                                    tag.name
+                                  );
+                                  setTagSelectionDialog({
+                                    isOpen: false,
+                                    targetVariable: "",
+                                  });
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm italic text-muted-foreground">
+                            No system tags available.
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
