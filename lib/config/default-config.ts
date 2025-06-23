@@ -60,6 +60,24 @@ export const defaultConfig: ConfigSchema = {
       default_policy: "drop",
       rules: [],
     },
+    dhcp_server: {
+      enabled: false,
+      start_ip: "10.0.0.100",
+      end_ip: "10.0.0.200",
+      lease_time: 24,
+      domain: "local",
+      dns_servers: ["8.8.8.8", "8.8.4.4"],
+    },
+    static_routes: [],
+    port_forwarding: [],
+    dynamic_dns: {
+      enabled: false,
+      provider: "dyndns",
+      domain: "",
+      username: "",
+      password: "",
+      update_interval: 60,
+    },
   },
   protocols: {
     modbus: {
@@ -180,4 +198,8 @@ export const defaultConfig: ConfigSchema = {
   calculation_tags: [],
   stats_tags: [],
   system_tags: [],
+  communication_forward: {
+    destinations: [],
+    bridges: [],
+  },
 };

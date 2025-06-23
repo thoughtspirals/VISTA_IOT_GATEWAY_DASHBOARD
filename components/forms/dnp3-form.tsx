@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog"
 
 // Define the IO Tag interface
 interface IOTag {
@@ -427,26 +428,25 @@ export function DNP3Form() {
   // Select a tag from the tree and add it to the current DNP3 point
   const selectTagFromTree = (tag: IOTag, deviceName: string, portName: string) => {
     if (selectedPointIdForTag !== null) {
-      // Update the DNP3 point with the selected tag using the format <device_name>:<io_tag_name>
       setDnp3Points(points => 
         points.map(point => 
-          point.id === selectedPointIdForTag ? { 
-            ...point, 
-            tagName: `${deviceName}:${tag.name}`,
-            selectedTag: tag.id
-          } : point
+          point.id === selectedPointIdForTag ? { ...point, tagName: `${deviceName}:${tag.name}`, selectedTag: tag.id } : point
         )
       )
-      
-      // Close the tag selection dialog
       setTagSelectionDialogOpen(false)
       setSelectedPointIdForTag(null)
-      
-      // Show success toast
-      toast({
-        title: "Tag assigned",
-        description: `Tag ${deviceName}:${tag.name} has been assigned to the DNP3 point.`,
-      })
+    }
+  }
+
+  const handleTagSelection = (tag: any) => {
+    if (selectedPointIdForTag !== null) {
+      setDnp3Points(points => 
+        points.map(point => 
+          point.id === selectedPointIdForTag ? { ...point, tagName: tag.name, selectedTag: tag.id } : point
+        )
+      )
+      setTagSelectionDialogOpen(false)
+      setSelectedPointIdForTag(null)
     }
   }
 
@@ -872,201 +872,11 @@ export function DNP3Form() {
       </Card>
 
       {/* Tag Selection Dialog */}
-      <Dialog open={tagSelectionDialogOpen} onOpenChange={setTagSelectionDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-5xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Select Tag</DialogTitle>
-            <DialogDescription>
-              Choose a tag to add to your DNP3 configuration
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 overflow-auto">
-            {/* Left panel - Data Center */}
-            <div className="border rounded-md p-4 md:col-span-1 overflow-auto">
-              <h3 className="font-medium mb-4">Data Center</h3>
-              <div className="space-y-1">
-                {/* IO Tag */}
-                <div className="flex items-center">
-                  <button 
-                    className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                    onClick={() => togglePortExpansion('io-tag')}
-                  >
-                    {expandedPorts.includes('io-tag') ? 
-                      <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                      <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                    }
-                    <Tag className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>IO Tag</span>
-                  </button>
-                </div>
-                
-                {expandedPorts.includes('io-tag') && (
-                  <div className="ml-6 space-y-1">
-                    {ioPorts.map(port => (
-                      <div key={port.id}>
-                        <button 
-                          className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                          onClick={() => togglePortExpansion(port.id)}
-                        >
-                          {expandedPorts.includes(port.id) ? 
-                            <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                            <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                          }
-                          <Server className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{port.name}</span>
-                        </button>
-                        
-                        {expandedPorts.includes(port.id) && (
-                          <div className="ml-6 space-y-1">
-                            {port.devices.map(device => (
-                              <div key={device.id}>
-                                <button 
-                                  className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                                  onClick={() => toggleDeviceExpansion(device.id)}
-                                >
-                                  {expandedDevices.includes(device.id) ? 
-                                    <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                                    <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                                  }
-                                  <Cpu className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span>{device.name}</span>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Calculation Tag */}
-                <div className="flex items-center">
-                  <button 
-                    className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                    onClick={() => togglePortExpansion('calculation-tag')}
-                  >
-                    {expandedPorts.includes('calculation-tag') ? 
-                      <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                      <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                    }
-                    <FileDigit className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>Calculation Tag</span>
-                  </button>
-                </div>
-                
-                {/* User Tag */}
-                <div className="flex items-center">
-                  <button 
-                    className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                    onClick={() => togglePortExpansion('user-tag')}
-                  >
-                    {expandedPorts.includes('user-tag') ? 
-                      <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                      <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                    }
-                    <UserCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>User Tag</span>
-                  </button>
-                </div>
-                
-                {/* System Tag */}
-                <div className="flex items-center">
-                  <button 
-                    className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                    onClick={() => togglePortExpansion('system-tag')}
-                  >
-                    {expandedPorts.includes('system-tag') ? 
-                      <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                      <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                    }
-                    <Cog className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>System Tag</span>
-                  </button>
-                </div>
-                
-                {/* Stats Tag */}
-                <div className="flex items-center">
-                  <button 
-                    className="flex items-center w-full text-left hover:bg-gray-100 p-1 rounded"
-                    onClick={() => togglePortExpansion('stats-tag')}
-                  >
-                    {expandedPorts.includes('stats-tag') ? 
-                      <ChevronDown className="h-4 w-4 mr-1 flex-shrink-0" /> : 
-                      <ChevronRight className="h-4 w-4 mr-1 flex-shrink-0" />
-                    }
-                    <BarChart className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>Stats Tag</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Right panel - Available Tags */}
-            <div className="border rounded-md p-4 md:col-span-2 overflow-auto">
-              <h3 className="font-medium mb-4">Available Tags</h3>
-              
-              {expandedDevices.length > 0 && (
-                <div>
-                  {ioPorts.map(port => (
-                    port.devices
-                      .filter(device => expandedDevices.includes(device.id))
-                      .map(device => (
-                        <div key={device.id} className="mb-4">
-                          <div className="flex items-center mb-2">
-                            <Cpu className="h-5 w-5 mr-2" />
-                            <h4 className="font-medium">DEVICE {device.unitNumber || 1}</h4>
-                          </div>
-                          
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Tag Name</TableHead>
-                                <TableHead>Data Type</TableHead>
-                                <TableHead>Address</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead></TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {device.tags?.map(tag => (
-                                <TableRow key={tag.id}>
-                                  <TableCell>{tag.name}</TableCell>
-                                  <TableCell>{tag.dataType}</TableCell>
-                                  <TableCell>{tag.address}</TableCell>
-                                  <TableCell>{tag.description}</TableCell>
-                                  <TableCell>
-                                    <Button 
-                                      className="bg-blue-500 hover:bg-blue-600 text-white"
-                                      onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                    >
-                                      Select
-                                    </Button>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ))
-                  ))}
-                </div>
-              )}
-              
-              {expandedDevices.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  Select a device from the Data Center to view available tags
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <DialogFooter className="border-t pt-4 mt-4">
-            <Button variant="outline" onClick={() => setTagSelectionDialogOpen(false)}>Cancel</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TagSelectionDialog
+        open={tagSelectionDialogOpen}
+        onOpenChange={setTagSelectionDialogOpen}
+        onSelectTag={handleTagSelection}
+      />
       
       {/* Deadband Dialog */}
       <Dialog open={deadbandDialogOpen} onOpenChange={setDeadbandDialogOpen}>

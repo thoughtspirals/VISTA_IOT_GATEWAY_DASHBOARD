@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, Download, ChevronRight, ChevronDown, Tag, Server, Cpu, BarChart, FileDigit, UserCircle, Cog } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog"
 
 // Define ASN Type options
 const ASN_TYPE_OPTIONS = [
@@ -218,6 +219,180 @@ export function SNMPForm() {
     })
   }
   
+  // Select a tag from the tree and add it to SNMP tags or trap tags
+  const selectTagFromTree = (tag: IOTag, deviceName: string, portName: string) => {
+    if (isForTrapTag) {
+      // If selecting for trap tag, use the addSelectedTagAsTrapTag function
+      addSelectedTagAsTrapTag(tag, deviceName, portName)
+      } else {
+      // Find the parent group
+      const parentId = targetGroupId || "root"
+      const parentGroup = snmpTags.find(t => t.id === parentId)
+      
+      // For tags added directly to the root, we need to find the highest object ID among both groups and direct tags
+      let nextObjectId = 1
+      if (parentId === "root") {
+        // Find the highest object ID among groups and direct root tags
+        snmpTags.forEach(t => {
+          if ((t.parentId === "root" && !t.isGroup) || (t.isGroup && t.id !== "root")) {
+            const objId = parseInt(t.objectId)
+            if (!isNaN(objId) && objId >= nextObjectId) {
+              nextObjectId = objId + 1
+            }
+          }
+        })
+      } else {
+        // Find the highest object ID within this specific group
+        snmpTags.forEach(t => {
+          if (t.parentId === parentId && !t.isGroup && t.objectId) {
+            const objId = parseInt(t.objectId)
+          if (!isNaN(objId) && objId >= nextObjectId) {
+            nextObjectId = objId + 1
+            }
+          }
+        })
+      }
+      
+      // Get the parent's object ID for constructing the full object ID
+      let parentObjectId = ""
+      if (parentId !== "root") {
+        parentObjectId = parentGroup?.objectId || ""
+      }
+      
+      // Create the full object ID
+      const fullObjectId = parentId === "root" 
+        ? `${edgelinkOidValue}.${nextObjectId}` 
+        : `${edgelinkOidValue}.${parentObjectId}.${nextObjectId}`
+      
+      // Create a new SNMP tag from the selected IO tag
+      const newTag: SNMPTag = {
+        id: `tag${Date.now()}`,
+        name: `${deviceName}:${tag.name}`,
+        // Use the targetGroupId if available, otherwise use "root"
+        parentId: parentId,
+        asnType: "Integer32", // Default ASN type
+      objectId: nextObjectId.toString(),
+        fullObjectId: fullObjectId,
+        readWrite: "Read/Write",
+        description: tag.description || "Imported from IO Tag"
+      }
+      
+      // Add the new tag to the SNMP tags list and ensure parent group is expanded
+      setSnmpTags(prevTags => {
+        // First add the new tag
+        const updatedTags = [...prevTags, newTag]
+        
+        // If we have a target group, make sure it's expanded
+        if (targetGroupId) {
+          return updatedTags.map(tag => {
+            if (tag.id === targetGroupId && !tag.isExpanded) {
+              return { ...tag, isExpanded: true }
+            }
+            return tag
+          })
+        }
+        
+        return updatedTags
+      })
+      
+      // Close the dialog and reset the targetGroupId
+      setTagSelectionDialogOpen(false)
+      setTargetGroupId(null)
+      
+      toast({
+        title: "Tag Added",
+        description: `Tag ${newTag.name} has been added to SNMP tags.`
+      })
+    }
+  }
+  
+  // Function to handle tag selection
+  const handleTagSelection = (tag: any) => {
+    if (isForTrapTag) {
+      // Handle trap tag selection
+      addSelectedTagAsTrapTag(tag, tag.path ? tag.path.split('/')[1] : 'Unknown', tag.path ? tag.path.split('/')[0] : 'Unknown')
+    } else {
+      // Handle regular SNMP tag selection
+      const parentId = targetGroupId || "root"
+      const parentGroup = snmpTags.find(t => t.id === parentId)
+      
+      // For tags added directly to the root, we need to find the highest object ID among both groups and direct tags
+      let nextObjectId = 1
+      if (parentId === "root") {
+        // Find the highest object ID among groups and direct root tags
+        snmpTags.forEach(t => {
+          if ((t.parentId === "root" && !t.isGroup) || (t.isGroup && t.id !== "root")) {
+            const objId = parseInt(t.objectId)
+            if (!isNaN(objId) && objId >= nextObjectId) {
+              nextObjectId = objId + 1
+            }
+          }
+        })
+      } else {
+        // Find the highest object ID within this specific group
+        snmpTags.forEach(t => {
+          if (t.parentId === parentId && !t.isGroup && t.objectId) {
+            const objId = parseInt(t.objectId)
+            if (!isNaN(objId) && objId >= nextObjectId) {
+              nextObjectId = objId + 1
+            }
+          }
+        })
+      }
+      
+      // Get the parent's object ID for constructing the full object ID
+      let parentObjectId = ""
+      if (parentId !== "root") {
+        parentObjectId = parentGroup?.objectId || ""
+      }
+      
+      // Create the full object ID
+      const fullObjectId = parentId === "root" 
+        ? `${edgelinkOidValue}.${nextObjectId}` 
+        : `${edgelinkOidValue}.${parentObjectId}.${nextObjectId}`
+      
+      // Create a new SNMP tag from the selected tag
+      const newTag: SNMPTag = {
+        id: `tag${Date.now()}`,
+        name: tag.name,
+        // Use the targetGroupId if available, otherwise use "root"
+        parentId: parentId,
+        asnType: "Integer32", // Default ASN type
+        objectId: nextObjectId.toString(),
+        fullObjectId: fullObjectId,
+        readWrite: "Read/Write",
+        description: tag.description || "Imported from Tag"
+      }
+      
+      // Add the new tag to the SNMP tags list and ensure parent group is expanded
+      setSnmpTags(prevTags => {
+        // First add the new tag
+        const updatedTags = [...prevTags, newTag]
+        
+        // If we have a target group, make sure it's expanded
+        if (targetGroupId) {
+          return updatedTags.map(tag => {
+            if (tag.id === targetGroupId && !tag.isExpanded) {
+              return { ...tag, isExpanded: true }
+            }
+            return tag
+          })
+        }
+        
+        return updatedTags
+      })
+      
+      // Close the dialog and reset the targetGroupId
+      setTagSelectionDialogOpen(false)
+      setTargetGroupId(null)
+      
+      toast({
+        title: "Tag Added",
+        description: `Tag ${newTag.name} has been added to SNMP tags.`
+      })
+    }
+  }
+  
   // Function to handle tag selection
   const toggleTagSelection = (id: string) => {
     setSelectedTags(prevSelected => {
@@ -227,6 +402,14 @@ export function SNMPForm() {
         return [...prevSelected, id]
       }
     })
+  }
+  
+  // Function to add a new tag
+  const addTag = () => {
+    // Reset the target group ID to add to root
+    setTargetGroupId(null)
+    // Open the tag selection dialog
+    setTagSelectionDialogOpen(true)
   }
   
   // Function to add a new group
@@ -303,101 +486,6 @@ export function SNMPForm() {
         return [...prev, deviceId];
       }
     });
-  }
-  
-  // Select a tag from the tree and add it to SNMP tags or trap tags
-  const selectTagFromTree = (tag: IOTag, deviceName: string, portName: string) => {
-    if (isForTrapTag) {
-      // If selecting for trap tag, use the addSelectedTagAsTrapTag function
-      addSelectedTagAsTrapTag(tag, deviceName, portName)
-    } else {
-      // Find the parent group
-      const parentId = targetGroupId || "root"
-      const parentGroup = snmpTags.find(t => t.id === parentId)
-      
-      // For tags added directly to the root, we need to find the highest object ID among both groups and direct tags
-      let nextObjectId = 1
-      if (parentId === "root") {
-        // Find the highest object ID among groups and direct root tags
-        snmpTags.forEach(t => {
-          if ((t.parentId === "root" && !t.isGroup) || (t.isGroup && t.id !== "root")) {
-            const objId = parseInt(t.objectId)
-            if (!isNaN(objId) && objId >= nextObjectId) {
-              nextObjectId = objId + 1
-            }
-          }
-        })
-      } else {
-        // Find the highest object ID within this specific group
-        snmpTags.forEach(t => {
-          if (t.parentId === parentId && !t.isGroup && t.objectId) {
-            const objId = parseInt(t.objectId)
-            if (!isNaN(objId) && objId >= nextObjectId) {
-              nextObjectId = objId + 1
-            }
-          }
-        })
-      }
-      
-      // Get the parent's object ID for constructing the full object ID
-      let parentObjectId = ""
-      if (parentId !== "root") {
-        parentObjectId = parentGroup?.objectId || ""
-      }
-      
-      // Create the full object ID
-      const fullObjectId = parentId === "root" 
-        ? `${edgelinkOidValue}.${nextObjectId}` 
-        : `${edgelinkOidValue}.${parentObjectId}.${nextObjectId}`
-      
-      // Create a new SNMP tag from the selected IO tag
-      const newTag: SNMPTag = {
-        id: `tag${Date.now()}`,
-        name: `${deviceName}:${tag.name}`,
-        // Use the targetGroupId if available, otherwise use "root"
-        parentId: parentId,
-        asnType: "Integer32", // Default ASN type
-        objectId: nextObjectId.toString(),
-        fullObjectId: fullObjectId,
-        readWrite: "Read/Write",
-        description: tag.description || "Imported from IO Tag"
-      }
-      
-      // Add the new tag to the SNMP tags list and ensure parent group is expanded
-      setSnmpTags(prevTags => {
-        // First add the new tag
-        const updatedTags = [...prevTags, newTag]
-        
-        // If we have a target group, make sure it's expanded
-        if (targetGroupId) {
-          return updatedTags.map(tag => {
-            if (tag.id === targetGroupId && !tag.isExpanded) {
-              return { ...tag, isExpanded: true }
-            }
-            return tag
-          })
-        }
-        
-        return updatedTags
-      })
-      
-      // Close the dialog and reset the targetGroupId
-      setTagSelectionDialogOpen(false)
-      setTargetGroupId(null)
-      
-      toast({
-        title: "Tag Added",
-        description: `Tag ${newTag.name} has been added to SNMP tags.`
-      })
-    }
-  }
-  
-  // Function to add a new tag
-  const addTag = () => {
-    // Reset the target group ID to add to root
-    setTargetGroupId(null)
-    // Open the tag selection dialog
-    setTagSelectionDialogOpen(true)
   }
   
   // Function to handle ASN Type change
@@ -1007,7 +1095,10 @@ export function SNMPForm() {
                 <div className="flex items-center" style={{ paddingLeft: `${level * 20}px` }}>
                   {hasChildren ? (
                     <button 
-                      onClick={() => toggleExpand(tag.id)} 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpand(tag.id);
+                      }} 
                       className="mr-2 p-1 rounded-sm hover:bg-accent"
                     >
                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -1138,259 +1229,11 @@ export function SNMPForm() {
   return (
     <div className="space-y-4">
       {/* Tag Selection Dialog */}
-      <Dialog open={tagSelectionDialogOpen} onOpenChange={(open) => {
-        setTagSelectionDialogOpen(open);
-        if (!open) {
-          setIsForTrapTag(false);
-          setTargetGroupId(null);
-        }
-      }}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Select Tag</DialogTitle>
-            <DialogDescription>
-              {isForTrapTag 
-                ? "Choose a tag to add to your SNMP trap configuration" 
-                : "Choose a tag to add to your SNMP configuration"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex gap-2 h-[500px]">
-            {/* Left side: Data Center Categories (1/4 width) */}
-            <div className="w-1/4 border rounded-md overflow-auto">
-              <div className="p-2 font-medium border-b">Data Center</div>
-              <ScrollArea className="h-[450px]">
-                <ul className="space-y-1 p-2">
-                  {/* IO Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('io-tag')}
-                    >
-                      {expandedPorts.includes('io-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">IO Tag</span>
-                    </div>
-                    
-                    {/* Show ports if IO Tag is expanded */}
-                    {expandedPorts.includes('io-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {ioPorts.map(port => (
-                          <li key={port.id} className="rounded hover:bg-muted">
-                            <div 
-                              className="flex items-center p-2 cursor-pointer"
-                              onClick={() => togglePortExpansion(port.id)}
-                            >
-                              {expandedPorts.includes(port.id) ? 
-                                <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                <ChevronRight className="h-4 w-4 mr-1" />
-                              }
-                              <Server className="h-4 w-4 mr-2" />
-                              <span className="text-sm">{port.name}</span>
-                            </div>
-                            
-                            {/* Show devices if port is expanded */}
-                            {expandedPorts.includes(port.id) && (
-                              <ul className="ml-6 space-y-1">
-                                {port.devices?.map(device => (
-                                  <li key={device.id} className="rounded hover:bg-muted">
-                                    <div 
-                                      className="flex items-center p-2 cursor-pointer"
-                                      onClick={() => toggleDeviceExpansion(device.id)}
-                                    >
-                                      {expandedDevices.includes(device.id) ? 
-                                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                        <ChevronRight className="h-4 w-4 mr-1" />
-                                      }
-                                      <Cpu className="h-4 w-4 mr-2" />
-                                      <span className="text-sm">{device.name}</span>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* Calculation Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('calculation-tag')}
-                    >
-                      {expandedPorts.includes('calculation-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <FileDigit className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Calculation Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* User Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('user-tag')}
-                    >
-                      {expandedPorts.includes('user-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <UserCircle className="h-4 w-4 mr-2" />
-                      <span className="text-sm">User Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* System Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('system-tag')}
-                    >
-                      {expandedPorts.includes('system-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Cog className="h-4 w-4 mr-2" />
-                      <span className="text-sm">System Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* Stats Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('stats-tag')}
-                    >
-                      {expandedPorts.includes('stats-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <BarChart className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Stats Tag</span>
-                    </div>
-                  </li>
-                </ul>
-              </ScrollArea>
-            </div>
-            
-            {/* Right side: Tag content (3/4 width) */}
-            <div className="w-3/4 border rounded-md overflow-hidden">
-              <ScrollArea className="h-[450px]">
-                {/* Show IO Tag content if IO Tag section is selected and a port is expanded */}
-                {expandedPorts.includes('io-tag') && expandedPorts.some(id => ioPorts.some(port => port.id === id)) && (
-                  <div className="p-4">
-                    {ioPorts
-                      .filter(port => expandedPorts.includes(port.id))
-                      .map(port => (
-                        <div key={port.id} className="mb-4">
-                          <h3 className="text-lg font-medium mb-2">{port.name}</h3>
-                          {port.devices
-                            .filter(device => expandedDevices.includes(device.id))
-                            .map(device => (
-                              <div key={device.id} className="mb-4 ml-4">
-                                <h4 className="text-md font-medium mb-2">{device.name}</h4>
-                                <div className="border rounded-md overflow-hidden">
-                                  {device.tags && device.tags.length > 0 ? (
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead>Name</TableHead>
-                                          <TableHead>Data Type</TableHead>
-                                          <TableHead>Address</TableHead>
-                                          <TableHead>Description</TableHead>
-                                          <TableHead>Action</TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {device.tags.map(tag => (
-                                          <TableRow key={tag.id}>
-                                            <TableCell>{tag.name}</TableCell>
-                                            <TableCell>{tag.dataType}</TableCell>
-                                            <TableCell>{tag.address}</TableCell>
-                                            <TableCell>{tag.description}</TableCell>
-                                            <TableCell>
-                                              <Button 
-                                                size="sm" 
-                                                onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                              >
-                                                Select
-                                              </Button>
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  ) : (
-                                    <div className="text-center p-4 text-muted-foreground">
-                                      No tags available for this device
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ))}
-                  </div>
-                )}
-                
-                {/* Show placeholder if calculation tag section is selected */}
-                {expandedPorts.includes('calculation-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <FileDigit className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Calculation tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show placeholder if user tag section is selected */}
-                {expandedPorts.includes('user-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <UserCircle className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">User tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show placeholder if system tag section is selected */}
-                {expandedPorts.includes('system-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Cog className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">System tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show placeholder if stats tag section is selected */}
-                {expandedPorts.includes('stats-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <BarChart className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Stats tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show default placeholder if no section is selected */}
-                {!expandedPorts.some(id => ['io-tag', 'calculation-tag', 'user-tag', 'system-tag', 'stats-tag'].includes(id)) && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Server className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Select a tag category from the left panel to view available tags</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTagSelectionDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TagSelectionDialog
+        open={tagSelectionDialogOpen}
+        onOpenChange={setTagSelectionDialogOpen}
+        onSelectTag={handleTagSelection}
+      />
       {/* Top Action Bar */}
       <div className="flex justify-between items-center p-2 bg-background border rounded-md">
         <div className="space-x-2">

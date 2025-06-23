@@ -53,7 +53,7 @@ export interface IOPortConfig {
 }
 
 interface IOPortFormProps {
-  onSubmit?: (config: IOPortConfig) => void;
+  onSubmit?: (config: IOPortConfig) => boolean;
   existingConfig?: IOPortConfig;
 }
 
@@ -162,42 +162,27 @@ export function IOPortForm({ onSubmit, existingConfig }: IOPortFormProps) {
       };
     }
 
-    // Update the global configuration store
-    const currentConfig = getConfig();
-    const existingPorts: IOPortConfig[] = currentConfig.io_setup?.ports || [];
-    let updatedPorts: IOPortConfig[];
-
-    if (existingConfig) {
-      // Editing an existing port
-      updatedPorts = existingPorts.map((p) =>
-        p.id === newPortConfig.id ? newPortConfig : p
-      );
-    } else {
-      // Adding a new port
-      updatedPorts = [...existingPorts, newPortConfig];
-    }
-    updateConfig(["io_setup", "ports"], updatedPorts);
-
     // Call the local onSubmit if provided (e.g., for closing dialogs)
     if (onSubmit) {
-      onSubmit(newPortConfig);
-    }
-
-    toast({
-      title: "IO Port Configuration Saved",
-      description: `Successfully saved configuration for ${name}`,
-    });
-
-    // Reset form if it's a new entry
-    if (!existingConfig) {
-      setType("");
-      setName("");
-      setDescription("");
-      setScanTime(1000);
-      setTimeOut(3000);
-      setRetryCount(3);
-      setAutoRecoverTime(10);
-      setScanMode("serial");
+      const success = onSubmit(newPortConfig);
+      if (success && !existingConfig) {
+        setType("");
+        setName("");
+        setDescription("");
+        setScanTime(1000);
+        setTimeOut(3000);
+        setRetryCount(3);
+        setAutoRecoverTime(10);
+        setScanMode("serial");
+        setEnabled(true);
+        setSerialPort("COM1");
+        setBaudRate(9600);
+        setDataBit(8);
+        setStopBit(1);
+        setParity("None");
+        setRts(false);
+        setDtr(false);
+      }
     }
   };
 

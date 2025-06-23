@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog"
 
 const modbusFormSchema = z.object({
   enabled: z.boolean(),
@@ -348,6 +349,41 @@ export function ModbusForm({ separateAdvancedConfig = false }: ModbusFormProps) 
         tagType: "holding", // Default to holding register
         address: tag.address, // Use the original tag's address
         modbusAddress: tag.address,
+        dataType: tag.dataType || "uint16", // Default to uint16
+        littleEndian: false,
+        reverseWord: false
+      }
+      
+      // Update the selected device with the new tag
+      const updatedDevice = {
+        ...selectedDevice,
+        tags: [...selectedDevice.tags, newTag]
+      }
+      
+      setSelectedDevice(updatedDevice)
+      
+      // Update the devices array
+      setDevices(prev => prev.map(device => 
+        device.id === selectedDevice.id ? updatedDevice : device
+      ))
+      
+      // Close the tag selection dialog
+      setTagSelectionDialogOpen(false)
+    }
+  }
+
+  const handleTagSelection = (tag: any) => {
+    if (selectedDevice) {
+      // Generate a unique ID for the new tag
+      const newTagId = `tag-${Date.now()}`
+      
+      // Create a new tag object
+      const newTag: ModbusTag = {
+        id: newTagId,
+        name: tag.name,
+        tagType: "holding", // Default to holding register
+        address: tag.address || tag.id, // Use the original tag's address or id
+        modbusAddress: tag.address || tag.id,
         dataType: tag.dataType || "uint16", // Default to uint16
         littleEndian: false,
         reverseWord: false
@@ -989,240 +1025,11 @@ export function ModbusForm({ separateAdvancedConfig = false }: ModbusFormProps) 
       </form>
       
       {/* Tag Selection Dialog */}
-      <Dialog open={tagSelectionDialogOpen} onOpenChange={setTagSelectionDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Select Tag</DialogTitle>
-            <DialogDescription>
-              Browse the IO tag structure and select a tag to add to the current device
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-auto">
-            <div className="space-y-4 p-2">
-              {/* Mobile view: Tabs for categories */}
-              <div className="block sm:hidden">
-                <Tabs defaultValue="io-tags" className="w-full">
-                  <TabsList className="grid grid-cols-5 w-full">
-                    <TabsTrigger value="io-tags" className="flex items-center justify-center">
-                      <Tag className="h-4 w-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="user-tags" className="flex items-center justify-center">
-                      <UserCircle className="h-4 w-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="calc-tags" className="flex items-center justify-center">
-                      <FileDigit className="h-4 w-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="stats-tags" className="flex items-center justify-center">
-                      <BarChart className="h-4 w-4" />
-                    </TabsTrigger>
-                    <TabsTrigger value="system-tags" className="flex items-center justify-center">
-                      <Cog className="h-4 w-4" />
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="io-tags" className="mt-2">
-                    <Card>
-                      <CardHeader className="py-3">
-                        <CardTitle className="text-sm font-medium">IO Tags</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-0 px-2">
-                        <div className="space-y-2">
-                          {ioPorts.map(port => (
-                            <div key={port.id} className="border rounded-md">
-                              <div 
-                                className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                                onClick={() => togglePortExpansion(port.id)}
-                              >
-                                {expandedPorts.includes(port.id) ? 
-                                  <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                  <ChevronRight className="h-4 w-4 mr-1" />
-                                }
-                                <Server className="h-4 w-4 mr-2 text-muted-foreground" />
-                                <span className="font-medium">{port.name}</span>
-                                <span className="text-xs text-muted-foreground ml-2">({port.type})</span>
-                              </div>
-                              
-                              {expandedPorts.includes(port.id) && (
-                                <div className="pl-4 pr-2 pb-2 space-y-2">
-                                  {port.devices.map(device => (
-                                    <div key={device.id} className="border rounded-md">
-                                      <div 
-                                        className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                                        onClick={() => toggleDeviceExpansion(device.id)}
-                                      >
-                                        {expandedDevices.includes(device.id) ? 
-                                          <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                          <ChevronRight className="h-4 w-4 mr-1" />
-                                        }
-                                        <Cpu className="h-4 w-4 mr-2 text-muted-foreground" />
-                                        <span className="font-medium">{device.name}</span>
-                                        <span className="text-xs text-muted-foreground ml-2">({device.type})</span>
-                                      </div>
-                                      
-                                      {expandedDevices.includes(device.id) && (
-                                        <div className="pl-4 pr-2 pb-2 overflow-x-auto">
-                                          <Table className="min-w-[400px]">
-                                            <TableHeader>
-                                              <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Data Type</TableHead>
-                                                <TableHead>Address</TableHead>
-                                                <TableHead></TableHead>
-                                              </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                              {device.tags?.map(tag => (
-                                                <TableRow key={tag.id}>
-                                                  <TableCell className="whitespace-nowrap">{tag.name}</TableCell>
-                                                  <TableCell className="whitespace-nowrap">{tag.dataType}</TableCell>
-                                                  <TableCell className="whitespace-nowrap">{tag.address}</TableCell>
-                                                  <TableCell>
-                                                    <Button 
-                                                      variant="ghost" 
-                                                      size="sm"
-                                                      onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                                    >
-                                                      Select
-                                                    </Button>
-                                                  </TableCell>
-                                                </TableRow>
-                                              ))}
-                                            </TableBody>
-                                          </Table>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  {/* Other tabs content would go here */}
-                </Tabs>
-              </div>
-              
-              {/* Desktop view: Side-by-side layout */}
-              <div className="hidden sm:grid sm:grid-cols-5 gap-4">
-                <Card className="sm:col-span-1 h-auto overflow-auto">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm font-medium">Tag Categories</CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-0">
-                    <div className="space-y-1">
-                      <div className="flex items-center px-2 py-1.5 rounded-md bg-primary text-primary-foreground text-sm">
-                        <Tag className="h-4 w-4 mr-2" />
-                        IO Tags
-                      </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
-                        <UserCircle className="h-4 w-4 mr-2" />
-                        User Tags
-                      </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
-                        <FileDigit className="h-4 w-4 mr-2" />
-                        Calculation Tags
-                      </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
-                        <BarChart className="h-4 w-4 mr-2" />
-                        Stats Tags
-                      </div>
-                      <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground">
-                        <Cog className="h-4 w-4 mr-2" />
-                        System Tags
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="sm:col-span-4 h-auto overflow-auto">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm font-medium">IO Tags</CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-0">
-                    <div className="space-y-2">
-                      {ioPorts.map(port => (
-                        <div key={port.id} className="border rounded-md">
-                          <div 
-                            className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                            onClick={() => togglePortExpansion(port.id)}
-                          >
-                            {expandedPorts.includes(port.id) ? 
-                              <ChevronDown className="h-4 w-4 mr-1" /> : 
-                              <ChevronRight className="h-4 w-4 mr-1" />
-                            }
-                            <Server className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span className="font-medium">{port.name}</span>
-                            <span className="text-xs text-muted-foreground ml-2">({port.type})</span>
-                          </div>
-                          
-                          {expandedPorts.includes(port.id) && (
-                            <div className="pl-6 pr-2 pb-2 space-y-2">
-                              {port.devices.map(device => (
-                                <div key={device.id} className="border rounded-md">
-                                  <div 
-                                    className="flex items-center p-2 cursor-pointer hover:bg-muted/50"
-                                    onClick={() => toggleDeviceExpansion(device.id)}
-                                  >
-                                    {expandedDevices.includes(device.id) ? 
-                                      <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                      <ChevronRight className="h-4 w-4 mr-1" />
-                                    }
-                                    <Cpu className="h-4 w-4 mr-2 text-muted-foreground" />
-                                    <span className="font-medium">{device.name}</span>
-                                    <span className="text-xs text-muted-foreground ml-2">({device.type})</span>
-                                  </div>
-                                  
-                                  {expandedDevices.includes(device.id) && (
-                                    <div className="pl-6 pr-2 pb-2 overflow-x-auto">
-                                      <Table>
-                                        <TableHeader>
-                                          <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Data Type</TableHead>
-                                            <TableHead>Address</TableHead>
-                                            <TableHead></TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {device.tags?.map(tag => (
-                                            <TableRow key={tag.id}>
-                                              <TableCell>{tag.name}</TableCell>
-                                              <TableCell>{tag.dataType}</TableCell>
-                                              <TableCell>{tag.address}</TableCell>
-                                              <TableCell>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="sm"
-                                                  onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                                >
-                                                  Select
-                                                </Button>
-                                              </TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="border-t pt-4 mt-4">
-            <Button variant="outline" onClick={() => setTagSelectionDialogOpen(false)}>Cancel</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TagSelectionDialog
+        open={tagSelectionDialogOpen}
+        onOpenChange={setTagSelectionDialogOpen}
+        onSelectTag={handleTagSelection}
+      />
 
       {/* If separate, render advanced config outside the form */}
       {form.watch("enabled") && separateAdvancedConfig && (
@@ -1554,291 +1361,6 @@ export function ModbusForm({ separateAdvancedConfig = false }: ModbusFormProps) 
           </CardContent>
         </Card>
       )}
-      
-      {/* Tag Selection Dialog */}
-      <Dialog open={tagSelectionDialogOpen} onOpenChange={setTagSelectionDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Select Tag</DialogTitle>
-            <DialogDescription>
-              Choose a tag to add to your Modbus configuration
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex gap-2 h-[500px]">
-            {/* Left side: Data Center Categories (1/4 width) */}
-            <div className="w-1/4 border rounded-md overflow-auto">
-              <div className="p-2 font-medium border-b">Data Center</div>
-              <ScrollArea className="h-[450px]">
-                <ul className="space-y-1 p-2">
-                  {/* IO Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('io-tag')}
-                    >
-                      {expandedPorts.includes('io-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">IO Tag</span>
-                    </div>
-                    
-                    {/* Show ports if IO Tag is expanded */}
-                    {expandedPorts.includes('io-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {ioPorts.map(port => (
-                          <li key={port.id} className="rounded hover:bg-muted">
-                            <div 
-                              className="flex items-center p-2 cursor-pointer"
-                              onClick={() => togglePortExpansion(port.id)}
-                            >
-                              {expandedPorts.includes(port.id) ? 
-                                <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                <ChevronRight className="h-4 w-4 mr-1" />
-                              }
-                              <Server className="h-4 w-4 mr-2" />
-                              <span className="text-sm">{port.name}</span>
-                            </div>
-                            
-                            {/* Show devices if port is expanded */}
-                            {expandedPorts.includes(port.id) && (
-                              <ul className="ml-6 space-y-1">
-                                {port.devices?.map(device => (
-                                  <li key={device.id} className="rounded hover:bg-muted">
-                                    <div 
-                                      className="flex items-center p-2 cursor-pointer"
-                                      onClick={() => toggleDeviceExpansion(device.id)}
-                                    >
-                                      {expandedDevices.includes(device.id) ? 
-                                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                        <ChevronRight className="h-4 w-4 mr-1" />
-                                      }
-                                      <Cpu className="h-4 w-4 mr-2" />
-                                      <span className="text-sm">{device.name}</span>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* Calculation Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('calculation-tag')}
-                    >
-                      {expandedPorts.includes('calculation-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Calculation Tag</span>
-                    </div>
-                    
-                    {/* Show calculation tags when expanded */}
-                    {expandedPorts.includes('calculation-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {/* This would be populated with actual calculation tags */}
-                        <li className="text-xs text-muted-foreground p-2">Select to view calculation tags</li>
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* User Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('user-tag')}
-                    >
-                      {expandedPorts.includes('user-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">User Tag</span>
-                    </div>
-                    
-                    {/* Show user tags when expanded */}
-                    {expandedPorts.includes('user-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {/* This would be populated with actual user tags */}
-                        <li className="text-xs text-muted-foreground p-2">Select to view user tags</li>
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* System Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('system-tag')}
-                    >
-                      {expandedPorts.includes('system-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">System Tag</span>
-                    </div>
-                    
-                    {/* Show system tags when expanded */}
-                    {expandedPorts.includes('system-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {/* This would be populated with actual system tags */}
-                        <li className="text-xs text-muted-foreground p-2">Select to view system tags</li>
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* Stats Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('stats-tag')}
-                    >
-                      {expandedPorts.includes('stats-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <BarChart className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Stats Tag</span>
-                    </div>
-                    
-                    {/* Show stats tags when expanded */}
-                    {expandedPorts.includes('stats-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {/* This would be populated with actual stats tags */}
-                        <li className="text-xs text-muted-foreground p-2">Select to view stats tags</li>
-                      </ul>
-                    )}
-                  </li>
-                </ul>
-              </ScrollArea>
-            </div>
-            
-            {/* Right side: Device and Tag details (3/4 width) */}
-            <div className="w-3/4 border rounded-md overflow-hidden">
-              <div className="p-2 font-medium border-b">Available Tags</div>
-              <ScrollArea className="h-[450px]">
-                {/* Show IO tags if IO Tag and specific port and device are selected */}
-                {expandedPorts.includes('io-tag') && expandedDevices.length > 0 && (
-                  <div className="p-4 space-y-4">
-                    {ioPorts
-                      .filter(port => expandedPorts.includes(port.id))
-                      .map(port => (
-                        <div key={port.id} className="space-y-4">
-                          {port.devices
-                            .filter(device => expandedDevices.includes(device.id))
-                            .map(device => (
-                              <div key={device.id} className="border rounded-md p-4">
-                                <div className="flex items-center mb-3">
-                                  <Cpu className="h-5 w-5 mr-2" />
-                                  <h3 className="text-md font-semibold">{device.name}</h3>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  {device.tags && device.tags.length > 0 ? (
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead>Tag Name</TableHead>
-                                          <TableHead>Data Type</TableHead>
-                                          <TableHead>Address</TableHead>
-                                          <TableHead>Description</TableHead>
-                                          <TableHead></TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {device.tags.map(tag => (
-                                          <TableRow key={tag.id}>
-                                            <TableCell>{tag.name}</TableCell>
-                                            <TableCell>{tag.dataType}</TableCell>
-                                            <TableCell>{tag.address}</TableCell>
-                                            <TableCell className="max-w-[200px] truncate">
-                                              {tag.description}
-                                            </TableCell>
-                                            <TableCell>
-                                              <Button 
-                                                size="sm" 
-                                                onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                              >
-                                                Select
-                                              </Button>
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  ) : (
-                                    <div className="text-center p-4 text-muted-foreground">
-                                      No tags available for this device
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ))}
-                  </div>
-                )}
-                
-                {/* Show placeholder if calculation tag section is selected */}
-                {expandedPorts.includes('calculation-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Tag className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Calculation tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show placeholder if user tag section is selected */}
-                {expandedPorts.includes('user-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Tag className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">User tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show placeholder if system tag section is selected */}
-                {expandedPorts.includes('system-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Tag className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">System tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show placeholder if stats tag section is selected */}
-                {expandedPorts.includes('stats-tag') && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <BarChart className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Stats tags would be shown here based on the selected category</p>
-                  </div>
-                )}
-                
-                {/* Show default placeholder if no section is selected */}
-                {!expandedPorts.some(id => ['io-tag', 'calculation-tag', 'user-tag', 'system-tag', 'stats-tag'].includes(id)) && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Server className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Select a tag category from the left panel to view available tags</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTagSelectionDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Form>
   )
 }

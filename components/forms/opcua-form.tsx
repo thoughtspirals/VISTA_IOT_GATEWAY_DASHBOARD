@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Check, X, Plus, Trash, Download, Upload, ChevronDown, ChevronRight, Server, Cpu, Tag, UserCircle, FileDigit, BarChart, Cog } from "lucide-react"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog"
 
 // Define interfaces for IO Tags, Ports, and Devices
 interface IOTag {
@@ -594,6 +595,77 @@ export function OPCUAForm() {
     const successMessage = selectedGroup
       ? `Added tag ${tag.name} from ${deviceName} to group ${groupName}`
       : `Added tag ${tag.name} from ${deviceName} in ${portName}`;
+      
+    toast({
+      title: "Tag Added",
+      description: successMessage,
+    })
+  }
+
+  const handleTagSelection = (tag: any) => {
+    // Get the namespace value from the state
+    const namespaceValue = activeTab === "general-setting" ? "2" : "2"; // Default to 2 if not set
+    
+    // Check if we're adding a tag to a specific group
+    const selectedGroupJson = localStorage.getItem('selectedGroupForTag');
+    let selectedGroup = null;
+    let groupName = "";
+    
+    if (selectedGroupJson) {
+      try {
+        selectedGroup = JSON.parse(selectedGroupJson);
+        groupName = selectedGroup.name;
+      } catch (e) {
+        console.error('Error parsing selected group:', e);
+      }
+      // Clear the selected group from localStorage
+      localStorage.removeItem('selectedGroupForTag');
+    }
+    
+    // Format the node ID and names based on tag type
+    let formattedNodeId, formattedName;
+    
+    if (tag.path) {
+      // This is an IO tag with path information
+      const [portName, deviceName] = tag.path.split('/');
+      formattedNodeId = selectedGroup
+        ? `ns=${namespaceValue};s=${groupName}:${deviceName}:${tag.name}`
+        : `ns=${namespaceValue};s=${deviceName}:${tag.name}`;
+      formattedName = selectedGroup
+        ? `${groupName}:${deviceName}:${tag.name}`
+        : `${deviceName}:${tag.name}`;
+    } else {
+      // This is a different type of tag (calculation, user, stats, system)
+      formattedNodeId = selectedGroup
+        ? `ns=${namespaceValue};s=${groupName}:${tag.name}`
+        : `ns=${namespaceValue};s=${tag.name}`;
+      formattedName = selectedGroup
+        ? `${groupName}:${tag.name}`
+        : tag.name;
+    }
+    
+    // Add the selected tag to the devices list
+    const newTag = {
+      id: `tag-${Date.now()}`,
+      name: tag.name,
+      nodeId: formattedNodeId,
+      dataType: tag.dataType || "Double", // Use tag's data type or default
+      engineeringUnits: "",
+      browseName: formattedName,
+      displayName: formattedName,
+      description: tag.description || "",
+      groupId: selectedGroup?.id || null // Store the group ID if adding to a group
+    }
+    
+    setDevices(prev => [...prev, newTag])
+    
+    // Close the dialog
+    setTagSelectionDialogOpen(false)
+    
+    // Show success message
+    const successMessage = selectedGroup
+      ? `Added tag ${tag.name} to group ${groupName}`
+      : `Added tag ${tag.name}`;
       
     toast({
       title: "Tag Added",
@@ -1290,239 +1362,11 @@ export function OPCUAForm() {
       </Dialog>
       
       {/* Tag Selection Dialog */}
-      <Dialog open={tagSelectionDialogOpen} onOpenChange={setTagSelectionDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Select Tag</DialogTitle>
-            <DialogDescription>
-              {(() => {
-                // Check if we're adding to a specific group
-                const selectedGroupJson = localStorage.getItem('selectedGroupForTag');
-                if (selectedGroupJson) {
-                  try {
-                    const selectedGroup = JSON.parse(selectedGroupJson);
-                    return (
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center px-2 py-1 bg-muted rounded-md">
-                          <ChevronRight className="h-3 w-3 mr-1 text-muted-foreground" />
-                          <span className="font-medium">{selectedGroup.name}</span>
-                        </div>
-                        <span>Choose a tag to add to this group</span>
-                      </div>
-                    );
-                  } catch (e) {
-                    console.error('Error parsing selected group:', e);
-                  }
-                }
-                return 'Choose a tag to add to your OPC-UA configuration';
-              })()}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex gap-2 h-[500px]">
-            {/* Left side: Data Center Categories (1/4 width) */}
-            <div className="w-1/4 border rounded-md overflow-auto">
-              <div className="p-2 font-medium border-b">Data Center</div>
-              <ScrollArea className="h-[450px]">
-                <ul className="space-y-1 p-2">
-                  {/* IO Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('io-tag')}
-                    >
-                      {expandedPorts.includes('io-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">IO Tag</span>
-                    </div>
-                    
-                    {/* Show ports if IO Tag is expanded */}
-                    {expandedPorts.includes('io-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {ioPorts.map(port => (
-                          <li key={port.id} className="rounded hover:bg-muted">
-                            <div 
-                              className="flex items-center p-2 cursor-pointer"
-                              onClick={() => togglePortExpansion(port.id)}
-                            >
-                              {expandedPorts.includes(port.id) ? 
-                                <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                <ChevronRight className="h-4 w-4 mr-1" />
-                              }
-                              <Server className="h-4 w-4 mr-2" />
-                              <span className="text-sm">{port.name}</span>
-                            </div>
-                            
-                            {/* Show devices if port is expanded */}
-                            {expandedPorts.includes(port.id) && (
-                              <ul className="ml-6 space-y-1">
-                                {port.devices?.map(device => (
-                                  <li key={device.id} className="rounded hover:bg-muted">
-                                    <div 
-                                      className="flex items-center p-2 cursor-pointer"
-                                      onClick={() => toggleDeviceExpansion(device.id)}
-                                    >
-                                      {expandedDevices.includes(device.id) ? 
-                                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                        <ChevronRight className="h-4 w-4 mr-1" />
-                                      }
-                                      <Cpu className="h-4 w-4 mr-2" />
-                                      <span className="text-sm">{device.name}</span>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* Calculation Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('calculation-tag')}
-                    >
-                      {expandedPorts.includes('calculation-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <FileDigit className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Calculation Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* User Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('user-tag')}
-                    >
-                      {expandedPorts.includes('user-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <UserCircle className="h-4 w-4 mr-2" />
-                      <span className="text-sm">User Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* System Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('system-tag')}
-                    >
-                      {expandedPorts.includes('system-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Cog className="h-4 w-4 mr-2" />
-                      <span className="text-sm">System Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* Stats Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('stats-tag')}
-                    >
-                      {expandedPorts.includes('stats-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <BarChart className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Stats Tag</span>
-                    </div>
-                  </li>
-                </ul>
-              </ScrollArea>
-            </div>
-            
-            {/* Right side: Tag content (3/4 width) */}
-            <div className="w-3/4 border rounded-md overflow-hidden">
-              <ScrollArea className="h-[450px]">
-                {/* Show IO Tag content if IO Tag section is selected and a port is expanded */}
-                {expandedPorts.includes('io-tag') && expandedPorts.some(id => ioPorts.some(port => port.id === id)) && (
-                  <div className="p-4">
-                    {ioPorts
-                      .filter(port => expandedPorts.includes(port.id))
-                      .map(port => (
-                        <div key={port.id} className="mb-4">
-                          <h3 className="text-lg font-medium mb-2">{port.name}</h3>
-                          {port.devices
-                            .filter(device => expandedDevices.includes(device.id))
-                            .map(device => (
-                              <div key={device.id} className="mb-4 ml-4">
-                                <h4 className="text-md font-medium mb-2">{device.name}</h4>
-                                <div className="border rounded-md overflow-hidden">
-                                  {device.tags && device.tags.length > 0 ? (
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead>Name</TableHead>
-                                          <TableHead>Data Type</TableHead>
-                                          <TableHead>Address</TableHead>
-                                          <TableHead>Description</TableHead>
-                                          <TableHead>Action</TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {device.tags.map(tag => (
-                                          <TableRow key={tag.id}>
-                                            <TableCell>{tag.name}</TableCell>
-                                            <TableCell>{tag.dataType}</TableCell>
-                                            <TableCell>{tag.address}</TableCell>
-                                            <TableCell>{tag.description}</TableCell>
-                                            <TableCell>
-                                              <Button 
-                                                size="sm" 
-                                                onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                              >
-                                                Select
-                                              </Button>
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  ) : (
-                                    <div className="text-center p-4 text-muted-foreground">
-                                      No tags available for this device
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ))}
-                  </div>
-                )}
-                
-                {/* Show placeholder if no section is selected */}
-                {!expandedPorts.some(id => ['io-tag', 'calculation-tag', 'user-tag', 'system-tag', 'stats-tag'].includes(id)) && (
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                    <Server className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                    <p className="text-center">Select a tag category from the left panel to view available tags</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTagSelectionDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TagSelectionDialog
+        open={tagSelectionDialogOpen}
+        onOpenChange={setTagSelectionDialogOpen}
+        onSelectTag={handleTagSelection}
+      />
 
       {/* Engineering Units Dialog */}
       <Dialog open={engineeringUnitsDialogOpen} onOpenChange={setEngineeringUnitsDialogOpen}>

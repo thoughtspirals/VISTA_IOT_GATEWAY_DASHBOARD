@@ -21,8 +21,9 @@ export default function ConfigurationTab() {
   const [isConfigValid, setIsConfigValid] = useState(true)
 
   useEffect(() => {
-    setEditorContent(getYamlString())
-  }, [getYamlString])
+    setEditorContent(getYamlString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleEditorDidMount = () => {
     setIsEditorReady(true)
@@ -41,20 +42,21 @@ export default function ConfigurationTab() {
 
   const handleDeploy = async () => {
     setIsDeploying(true)
-    
-    toast.promise(
-      new Promise((resolve) => {
-        setTimeout(resolve, 2000)
-      }),
-      {
-        loading: 'Deploying configuration to device...',
-        success: (data) => {
-          setIsDeploying(false)
-          return 'Configuration deployed successfully to device'
-        },
-        error: 'Failed to deploy configuration',
-      }
-    )
+    try {
+      const response = await fetch("/api/deploy-config", {
+        method: "POST",
+        headers: { "Content-Type": "text/yaml" },
+        body: editorContent,
+      });
+      if (!response.ok) throw new Error("Failed to deploy");
+      toast.success("Configuration deployed and stored in database!");
+    } catch (error) {
+      toast.error("Failed to deploy configuration", {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setIsDeploying(false)
+    }
   }
 
   const handleReset = async () => {
@@ -176,7 +178,7 @@ export default function ConfigurationTab() {
                 Save Changes
               </Button>
               <Button 
-                variant="primary"
+                variant="default"
                 onClick={handleDeploy}
                 disabled={isDeploying || !isConfigValid}
               >

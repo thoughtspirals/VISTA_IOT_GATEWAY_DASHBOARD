@@ -2,22 +2,57 @@
 
 import type React from "react"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
+import { useConfigStore } from "@/lib/stores/configuration-store"
+import { RefreshCw } from "lucide-react"
 
 export function DHCPServerForm() {
   const { toast } = useToast()
+  const { updateConfig, getConfig } = useConfigStore()
+  const [isSaving, setIsSaving] = useState(false)
+  
+  // Get current configuration
+  const config = getConfig()
+  const dhcpConfig = config.network.dhcp_server
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Settings saved",
-      description: "DHCP server settings have been updated.",
-    })
+    setIsSaving(true)
+    
+    try {
+      const formData = new FormData(e.target as HTMLFormElement)
+      
+      const dhcpData = {
+        enabled: formData.get("dhcp-enabled") === "on",
+        start_ip: formData.get("start-ip") as string,
+        end_ip: formData.get("end-ip") as string,
+        lease_time: parseInt(formData.get("lease-time") as string) || 24,
+        domain: formData.get("domain") as string,
+        dns_servers: (formData.get("dns") as string)?.split(",").map(s => s.trim()).filter(s => s) || [],
+      }
+      
+      updateConfig(['network', 'dhcp_server'], dhcpData)
+      
+      toast({
+        title: "Settings saved",
+        description: "DHCP server settings have been updated.",
+      })
+    } catch (error) {
+      console.error('Error saving DHCP settings:', error)
+      toast({
+        title: "Error",
+        description: "Failed to save DHCP server settings.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -30,38 +65,77 @@ export function DHCPServerForm() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <Label htmlFor="dhcp-enabled">Enable DHCP Server</Label>
-            <Switch id="dhcp-enabled" defaultChecked />
+            <Switch 
+              id="dhcp-enabled" 
+              name="dhcp-enabled"
+              defaultChecked={dhcpConfig.enabled}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start-ip">Start IP Address</Label>
-              <Input id="start-ip" placeholder="10.0.0.100" />
+              <Input 
+                id="start-ip" 
+                name="start-ip"
+                placeholder="10.0.0.100" 
+                defaultValue={dhcpConfig.start_ip}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="end-ip">End IP Address</Label>
-              <Input id="end-ip" placeholder="10.0.0.200" />
+              <Input 
+                id="end-ip" 
+                name="end-ip"
+                placeholder="10.0.0.200" 
+                defaultValue={dhcpConfig.end_ip}
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="lease-time">Lease Time (hours)</Label>
-              <Input id="lease-time" placeholder="24" type="number" />
+              <Input 
+                id="lease-time" 
+                name="lease-time"
+                placeholder="24" 
+                type="number" 
+                defaultValue={dhcpConfig.lease_time}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="domain">Domain Name</Label>
-              <Input id="domain" placeholder="local" />
+              <Input 
+                id="domain" 
+                name="domain"
+                placeholder="local" 
+                defaultValue={dhcpConfig.domain}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="dns">DNS Servers (comma separated)</Label>
-            <Input id="dns" placeholder="8.8.8.8, 8.8.4.4" />
+            <Input 
+              id="dns" 
+              name="dns"
+              placeholder="8.8.8.8, 8.8.4.4" 
+              defaultValue={dhcpConfig.dns_servers.join(", ")}
+            />
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit">Save Changes</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
         </CardFooter>
       </Card>
     </form>

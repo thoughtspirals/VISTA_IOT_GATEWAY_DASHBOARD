@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/components/ui/use-toast"
 import { IEC61850Form } from "./iec61850-form"
+import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog"
 
 // Edit IP Dialog Component
 function EditIPDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -298,6 +299,7 @@ export function IECProtocolsForm() {
   const [expandedDevices, setExpandedDevices] = useState<string[]>([])
   const [currentSection, setCurrentSection] = useState<"DI" | "AI" | "Counter" | "DO" | "AO">("DI")
   const [ioPorts, setIoPorts] = useState<any[]>([])
+  const [selectedPointIdForTag, setSelectedPointIdForTag] = useState<string | null>(null)
   
   // Fetch IO ports data from localStorage
   useEffect(() => {
@@ -395,9 +397,16 @@ export function IECProtocolsForm() {
     setAdvancedSettingsOpen(true)
   }
   
-  const handleTagSelection = (section: "DI" | "AI" | "Counter" | "DO" | "AO") => {
-    setCurrentSection(section)
-    setTagSelectionDialogOpen(true)
+  const handleTagSelection = (tag: any) => {
+    if (selectedPointIdForTag !== null) {
+      setIecPoints(points => 
+        points.map(point => 
+          point.id === selectedPointIdForTag ? { ...point, tagName: tag.name, selectedTag: tag.id } : point
+        )
+      )
+      setTagSelectionDialogOpen(false)
+      setSelectedPointIdForTag(null)
+    }
   }
   
   // Toggle expansion of a port in the tree
@@ -423,176 +432,16 @@ export function IECProtocolsForm() {
   }
   
   // Select a tag from the tree and add it to the current section
-  const selectTagFromTree = (tag: any, deviceName: string, portName: string) => {
-    // Create a formatted tag name that includes the device name
-    const formattedTagName = `${deviceName}:${tag.name}`
-    
-    // Generate a unique ID for the new point
-    const newPointId = Date.now()
-    
-    // Get the next point number based on section
-    const getNextPointNumber = () => {
-      switch (currentSection) {
-        case "DI":
-          // Find the highest point number in the existing points, excluding the "Double click to edit" row
-          const highestDiPoint = Math.max(
-            ...diPoints
-              .filter(p => p.tagName !== "Double click to edit" && p.pointNumber)
-              .map(p => parseInt(p.pointNumber) || 1)
-          )
-          // Return the next number, or 2 if there are no existing points
-          return isFinite(highestDiPoint) ? (highestDiPoint + 1).toString() : "2"
-        
-        case "AI":
-          // Find the highest point number in the existing AI points, starting from 1794
-          const highestAiPoint = Math.max(
-            ...aiPoints
-              .filter(p => p.tagName !== "Double click to edit" && p.pointNumber)
-              .map(p => parseInt(p.pointNumber) || 1793)
-          )
-          // Return the next number, or 1794 if there are no existing points
-          return isFinite(highestAiPoint) ? (highestAiPoint + 1).toString() : "1794"
-        
-        case "Counter":
-          // Find the highest point number in the existing Counter points, starting from 3074
-          const highestCounterPoint = Math.max(
-            ...counterPoints
-              .filter(p => p.tagName !== "Double click to edit" && p.pointNumber)
-              .map(p => parseInt(p.pointNumber) || 3073)
-          )
-          // Return the next number, or 3074 if there are no existing points
-          return isFinite(highestCounterPoint) ? (highestCounterPoint + 1).toString() : "3074"
-        
-        case "DO":
-          // Find the highest point number in the existing DO points, starting from 2818
-          const highestDoPoint = Math.max(
-            ...doPoints
-              .filter(p => p.tagName !== "Double click to edit" && p.pointNumber)
-              .map(p => parseInt(p.pointNumber) || 2817)
-          )
-          // Return the next number, or 2818 if there are no existing points
-          return isFinite(highestDoPoint) ? (highestDoPoint + 1).toString() : "2818"
-        
-        case "AO":
-          // Find the highest point number in the existing AO points, starting from 2946
-          const highestAoPoint = Math.max(
-            ...aoPoints
-              .filter(p => p.tagName !== "Double click to edit" && p.pointNumber)
-              .map(p => parseInt(p.pointNumber) || 2945)
-          )
-          // Return the next number, or 2946 if there are no existing points
-          return isFinite(highestAoPoint) ? (highestAoPoint + 1).toString() : "2946"
-        
-        default:
-          return tag.address || ""
-      }
+  const selectTagFromTree = (tag: IOTag, deviceName: string, portName: string) => {
+    if (selectedPointIdForTag !== null) {
+      setIecPoints(points => 
+        points.map(point => 
+          point.id === selectedPointIdForTag ? { ...point, tagName: `${deviceName}:${tag.name}`, selectedTag: tag.id } : point
+        )
+      )
+      setTagSelectionDialogOpen(false)
+      setSelectedPointIdForTag(null)
     }
-    
-    // Add the selected tag to the appropriate section based on currentSection
-    switch (currentSection) {
-      case "DI":
-        setDiPoints(prev => {
-          // Filter out the "Double click to edit" row
-          const realPoints = prev.filter(p => p.tagName !== "Double click to edit")
-          // Create the new point
-          const newPoint = { 
-            id: newPointId, 
-            tagName: formattedTagName, 
-            valueType: "M_SP_NA_1", // Default to single-point-information
-            publicAddress: "2", // Default to 2 as requested
-            pointNumber: getNextPointNumber(), 
-            soe: "No SOE" // Default to No SOE
-          }
-          // Return all real points + new point + the "Double click to edit" row at the end
-          return [
-            ...realPoints,
-            newPoint,
-            { id: 999999, tagName: "Double click to edit", valueType: "", publicAddress: "", pointNumber: "", soe: "" }
-          ]
-        })
-        break
-      case "AI":
-        setAiPoints(prev => {
-          const realPoints = prev.filter(p => p.tagName !== "Double click to edit")
-          return [
-            ...realPoints,
-            { 
-              id: newPointId, 
-              tagName: formattedTagName, 
-              valueType: "M_ME_NA_1", // Default to normalized value
-              publicAddress: "2", // Default to 2 as requested
-              pointNumber: getNextPointNumber(), // Auto-increment from 1794
-              kValue: "1", // Default to 1
-              baseValue: "0", // Default to 1
-              changePercent: "10" // Default to 10%
-            },
-            { id: 999999, tagName: "Double click to edit", valueType: "", publicAddress: "", pointNumber: "", kValue: "", baseValue: "", changePercent: "" }
-          ]
-        })
-        break
-      case "Counter":
-        setCounterPoints(prev => {
-          const realPoints = prev.filter(p => p.tagName !== "Double click to edit")
-          return [
-            ...realPoints,
-            { 
-              id: newPointId, 
-              tagName: formattedTagName, 
-              valueType: "M_IT_NA_1", // Default to Integrated totals
-              publicAddress: "2", // Default to 2 as requested
-              pointNumber: getNextPointNumber(), // Auto-increment from 3074
-              kValue: "1", // Default to 1
-              baseValue: "0", // Default to 0
-              changePercent: "10" // Default to 10%
-            },
-            { id: 999999, tagName: "Double click to edit", valueType: "", publicAddress: "", pointNumber: "", kValue: "", baseValue: "", changePercent: "" }
-          ]
-        })
-        break
-      case "DO":
-        setDoPoints(prev => {
-          const realPoints = prev.filter(p => p.tagName !== "Double click to edit")
-          return [
-            ...realPoints,
-            { 
-              id: newPointId, 
-              tagName: formattedTagName, 
-              valueType: "C_SC_NA_1", // Default to Single command
-              publicAddress: "2", // Default to 2 as requested
-              pointNumber: getNextPointNumber() // Auto-increment from 2818
-            },
-            { id: 999999, tagName: "Double click to edit", valueType: "", publicAddress: "", pointNumber: "" }
-          ]
-        })
-        break
-      case "AO":
-        setAoPoints(prev => {
-          const realPoints = prev.filter(p => p.tagName !== "Double click to edit")
-          return [
-            ...realPoints,
-            { 
-              id: newPointId, 
-              tagName: formattedTagName, 
-              valueType: "C_SE_NA_1", // Default to set point command, normalized value
-              publicAddress: "2", // Default to 2 as requested
-              pointNumber: getNextPointNumber(), // Auto-increment from 2946
-              kValue: "1", // Default to 1
-              baseValue: "0" // Default to 0
-            },
-            { id: 999999, tagName: "Double click to edit", valueType: "", publicAddress: "", pointNumber: "", kValue: "", baseValue: "" }
-          ]
-        })
-        break
-    }
-    
-    // Show success toast
-    toast({
-      title: "Tag Added",
-      description: `Added tag ${tag.name} from ${deviceName} (${portName}) to ${currentSection} section.`,
-    })
-    
-    // Close the dialog
-    setTagSelectionDialogOpen(false)
   }
 
   return (
@@ -604,206 +453,11 @@ export function IECProtocolsForm() {
       />
       
       {/* Tag Selection Dialog */}
-      <Dialog open={tagSelectionDialogOpen} onOpenChange={setTagSelectionDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Select Tag</DialogTitle>
-            <DialogDescription>
-              Choose a tag to add to your IEC 60870-5-104 configuration
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex gap-2 h-[500px]">
-            {/* Left side: Data Center Categories (1/4 width) */}
-            <div className="w-1/4 border rounded-md overflow-auto">
-              <div className="p-2 font-medium border-b">Data Center</div>
-              <ScrollArea className="h-[450px]">
-                <ul className="space-y-1 p-2">
-                  {/* IO Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('io-tag')}
-                    >
-                      {expandedPorts.includes('io-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">IO Tag</span>
-                    </div>
-                    
-                    {/* Show ports if IO Tag is expanded */}
-                    {expandedPorts.includes('io-tag') && (
-                      <ul className="ml-6 space-y-1">
-                        {ioPorts.map(port => (
-                          <li key={port.id} className="rounded hover:bg-muted">
-                            <div 
-                              className="flex items-center p-2 cursor-pointer"
-                              onClick={() => togglePortExpansion(port.id)}
-                            >
-                              {expandedPorts.includes(port.id) ? 
-                                <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                <ChevronRight className="h-4 w-4 mr-1" />
-                              }
-                              <Server className="h-4 w-4 mr-2" />
-                              <span className="text-sm">{port.name}</span>
-                            </div>
-                            
-                            {/* Show devices if port is expanded */}
-                            {expandedPorts.includes(port.id) && (
-                              <ul className="ml-6 space-y-1">
-                                {port.devices?.map((device: any) => (
-                                  <li key={device.id} className="rounded hover:bg-muted">
-                                    <div 
-                                      className="flex items-center p-2 cursor-pointer"
-                                      onClick={() => toggleDeviceExpansion(device.id)}
-                                    >
-                                      {expandedDevices.includes(device.id) ? 
-                                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                                        <ChevronRight className="h-4 w-4 mr-1" />
-                                      }
-                                      <Cpu className="h-4 w-4 mr-2" />
-                                      <span className="text-sm">{device.name}</span>
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                  
-                  {/* Calculation Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('calculation-tag')}
-                    >
-                      {expandedPorts.includes('calculation-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Calculation Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* User Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('user-tag')}
-                    >
-                      {expandedPorts.includes('user-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">User Tag</span>
-                    </div>
-                  </li>
-                  
-                  {/* System Tag Section */}
-                  <li className="rounded hover:bg-muted">
-                    <div 
-                      className="flex items-center p-2 cursor-pointer"
-                      onClick={() => togglePortExpansion('system-tag')}
-                    >
-                      {expandedPorts.includes('system-tag') ? 
-                        <ChevronDown className="h-4 w-4 mr-1" /> : 
-                        <ChevronRight className="h-4 w-4 mr-1" />
-                      }
-                      <Tag className="h-4 w-4 mr-2" />
-                      <span className="text-sm">System Tag</span>
-                    </div>
-                  </li>
-                </ul>
-              </ScrollArea>
-            </div>
-            
-            {/* Right side: Device and Tag details (3/4 width) */}
-            <div className="w-3/4 border rounded-md overflow-hidden">
-              <div className="p-2 font-medium border-b">Available Tags</div>
-              <ScrollArea className="h-[450px]">
-                {/* Show IO tags if IO Tag and specific port and device are selected */}
-                {expandedPorts.includes('io-tag') && expandedDevices.length > 0 && (
-                  <div className="p-4 space-y-4">
-                    {ioPorts
-                      .filter(port => expandedPorts.includes(port.id))
-                      .map(port => (
-                        <div key={port.id} className="space-y-4">
-                          {port.devices
-                            .filter((device: any) => expandedDevices.includes(device.id))
-                            .map((device: any) => (
-                              <div key={device.id} className="border rounded-md p-4">
-                                <div className="flex items-center mb-3">
-                                  <Cpu className="h-5 w-5 mr-2" />
-                                  <h3 className="text-md font-semibold">{device.name}</h3>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  {device.tags && device.tags.length > 0 ? (
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead>Tag Name</TableHead>
-                                          <TableHead>Data Type</TableHead>
-                                          <TableHead>Address</TableHead>
-                                          <TableHead>Description</TableHead>
-                                          <TableHead></TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {device.tags.map((tag: any) => (
-                                          <TableRow key={tag.id}>
-                                            <TableCell>{tag.name}</TableCell>
-                                            <TableCell>{tag.dataType}</TableCell>
-                                            <TableCell>{tag.address}</TableCell>
-                                            <TableCell>{tag.description}</TableCell>
-                                            <TableCell>
-                                              <Button 
-                                                size="sm" 
-                                                onClick={() => selectTagFromTree(tag, device.name, port.name)}
-                                              >
-                                                Select
-                                              </Button>
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  ) : (
-                                    <div className="text-center p-4 text-muted-foreground">
-                                      No tags available for this device
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ))}
-                  </div>
-                )}
-                
-                {/* Show default placeholder */}
-                <div className="flex flex-col items-center justify-center h-full p-8 text-muted-foreground">
-                  <Server className="h-12 w-12 mb-4 text-muted-foreground/50" />
-                  <p className="text-center">No IO ports or devices are configured. Configure IO ports and devices to view available tags.</p>
-                </div>
-              </ScrollArea>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTagSelectionDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TagSelectionDialog
+        open={tagSelectionDialogOpen}
+        onOpenChange={setTagSelectionDialogOpen}
+        onSelectTag={handleTagSelection}
+      />
       
       <Tabs defaultValue="iec104">
         <TabsList className="mb-4">

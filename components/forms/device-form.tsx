@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -109,20 +109,32 @@ export interface DeviceConfig {
 }
 
 interface DeviceFormProps {
-  onSubmit?: (config: DeviceConfig) => void;
+  onSubmit?: (config: DeviceConfig) => boolean;
   existingConfig?: DeviceConfig;
   portId: string;
+  existingDeviceNames?: string[];
 }
 
 export function DeviceForm({
   onSubmit,
   existingConfig,
   portId,
+  existingDeviceNames = [],
 }: DeviceFormProps) {
   const { updateConfig, getConfig } = useConfigStore();
   const [enabled, setEnabled] = useState(existingConfig?.enabled ?? true);
   const [name, setName] = useState(existingConfig?.name || "NewDevice");
-  const [nameError, setNameError] = useState(true); // Start with error for default name
+  const [nameError, setNameError] = useState(() => {
+    const lowerNewName = (existingConfig?.name || "NewDevice").trim().toLowerCase();
+    const lowerExistingNames = (existingDeviceNames || [])
+      .filter(n => !existingConfig || n.toLowerCase() !== (existingConfig.name ?? "").toLowerCase())
+      .map(n => n.toLowerCase());
+    return (
+      (existingConfig?.name || "NewDevice") === "NewDevice" ||
+      (existingConfig?.name || "NewDevice").trim() === "" ||
+      lowerExistingNames.includes(lowerNewName)
+    );
+  });
   const [deviceType, setDeviceType] = useState(
     existingConfig?.deviceType || "Modbus RTU"
   );
@@ -151,10 +163,31 @@ export function DeviceForm({
     existingConfig?.analogBlockSize || 64
   );
 
+  useEffect(() => {
+    const lowerNewName = name.trim().toLowerCase();
+    const lowerExistingNames = (existingDeviceNames || [])
+      .filter(n => !existingConfig || n.toLowerCase() !== (existingConfig.name ?? "").toLowerCase())
+      .map(n => n.toLowerCase());
+    setNameError(
+      name === "NewDevice" ||
+      name.trim() === "" ||
+      lowerExistingNames.includes(lowerNewName)
+    );
+  }, [name, existingDeviceNames, existingConfig]);
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     setName(newName);
-    setNameError(newName === "NewDevice" || newName.trim() === "");
+    // Check for uniqueness (case-insensitive, ignore self if editing)
+    const lowerNewName = newName.trim().toLowerCase();
+    const lowerExistingNames = existingDeviceNames
+      .filter(n => !existingConfig || n.toLowerCase() !== (existingConfig.name ?? "").toLowerCase())
+      .map(n => n.toLowerCase());
+    setNameError(
+      newName === "NewDevice" ||
+      newName.trim() === "" ||
+      lowerExistingNames.includes(lowerNewName)
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -164,7 +197,6 @@ export function DeviceForm({
       toast({
         title: "Validation Error",
         description: "Please provide a valid device name",
-        variant: "destructive",
       });
       return;
     }
@@ -185,50 +217,22 @@ export function DeviceForm({
       tags: existingConfig?.tags || [], // Initialize tags array
     };
 
-    // Update the global configuration store
-    const currentGlobalConfig = getConfig();
-    const allPorts: IOPortConfig[] = currentGlobalConfig.io_setup?.ports || [];
-
-    const targetPortIndex = allPorts.findIndex((p) => p.id === portId);
-
-    if (targetPortIndex === -1) {
-      toast({
-        title: "Error",
-        description: `Port with ID ${portId} not found. Cannot save device.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const targetPort = { ...allPorts[targetPortIndex] }; // Shallow copy the target port
-    let updatedDevices: DeviceConfig[];
-
-    if (existingConfig) {
-      // Editing an existing device
-      updatedDevices = targetPort.devices.map((d) =>
-        d.id === newDeviceConfig.id ? newDeviceConfig : d
-      );
-    } else {
-      // Adding a new device
-      updatedDevices = [...(targetPort.devices || []), newDeviceConfig];
-    }
-    targetPort.devices = updatedDevices;
-
-    const updatedAllPorts = [...allPorts];
-    updatedAllPorts[targetPortIndex] = targetPort;
-    console.log("Ports being saved:", updatedAllPorts);
-
-    updateConfig(["io_setup", "ports"], updatedAllPorts);
-
-    // Call the local onSubmit if provided
     if (onSubmit) {
-      onSubmit(newDeviceConfig);
+      const success = onSubmit(newDeviceConfig);
+      if (success && !existingConfig) {
+        setEnabled(true);
+        setName("NewDevice");
+        setDeviceType("Modbus RTU");
+        setUnitNumber(1);
+        setTagWriteType("Single Write");
+        setDescription("");
+        setAddDeviceNameAsPrefix(true);
+        setUseAsciiProtocol(0);
+        setPacketDelay(20);
+        setDigitalBlockSize(512);
+        setAnalogBlockSize(64);
+      }
     }
-
-    toast({
-      title: "Device Configuration Saved",
-      description: `Successfully saved configuration for ${name}`,
-    });
   };
 
   const DEVICE_TYPES = [
@@ -285,7 +289,7 @@ export function DeviceForm({
                 />
                 {nameError && (
                   <p className="text-xs text-destructive">
-                    Please enter a unique device name
+                    Please enter a unique device name (not used by any other device in this port)
                   </p>
                 )}
               </div>

@@ -28,6 +28,7 @@ import {
   Cpu,
   AreaChart,
   Terminal,
+  Loader2,
 } from "lucide-react";
 import type { Port } from "@/components/tabs/io-tag-tab";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -48,6 +49,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/use-toast";
+import { useHydrateConfigFromBackend } from "@/hooks/useHydrateConfigFromBackend";
+import { useConfigStore } from "@/lib/stores/configuration-store";
+import { comprehensiveConfig } from "@/lib/config/comprehensive-config";
 
 import NetworkTab from "@/components/tabs/network-tab";
 import SecurityTab from "@/components/tabs/security-tab";
@@ -65,10 +69,10 @@ import { ImportConfigDialog } from "@/components/dialogs/import-config-dialog";
 import { ResetConfigDialog } from "@/components/dialogs/reset-config-dialog";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { DeviceConfigurationPanel } from "@/components/device-configuration-panel";
-import HardwareTab from "@/components/tabs/hardware-tab";
 import ConfigurationTab from "@/components/tabs/configuration-tab";
 import IOTagManagement from "@/components/tabs/io-tag-tab";
 import CalculationTagTab from "@/components/tabs/calculation-tag-tab";
+import CommunicationForwardTab from "@/components/tabs/communication-forward-tab";
 
 // Types for the navigation items
 type NavItem = {
@@ -84,6 +88,7 @@ type NavItem = {
 };
 
 function DashboardContent() {
+  useHydrateConfigFromBackend();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
@@ -104,23 +109,17 @@ function DashboardContent() {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [isLoadingComprehensive, setIsLoadingComprehensive] = useState(false);
 
   // Add state for active section
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const pathname = usePathname();
+  
+  // Get config store functions
+  const { updateConfig, resetConfig } = useConfigStore();
+
   // Modified navigation items with proper routes
   const navItems: NavItem[] = [
-    {
-      title: "Onboarding",
-      href: "/onboarding",
-      icon: Server,
-    },
-    {
-      title: "Dashboard",
-      href: "/",
-      icon: Gauge,
-      active: pathname === "/",
-    },
     {
       title: "Overview",
       href: "?tab=overview",
@@ -274,40 +273,16 @@ function DashboardContent() {
       ],
     },
     {
-      title: "MQTT",
-      href: "?tab=mqtt",
+      title: "Communication Forward",
+      href: "?tab=communication-forward",
       icon: MessageSquare,
-      active: activeTab === "mqtt",
-    },
-    {
-      title: "Hardware",
-      href: "?tab=hardware",
-      icon: HardDrive,
-      active: activeTab === "hardware",
-      submenu: [
-        {
-          title: "COM Ports",
-          href: "?tab=hardware&section=com-ports",
-          icon: Database,
-        },
-        {
-          title: "Watchdog",
-          href: "?tab=hardware&section=watchdog",
-          icon: RefreshCw,
-        },
-      ],
+      active: activeTab === "communication-forward",
     },
     {
       title: "Configuration",
       href: "?tab=configuration",
       icon: Code,
       active: activeTab === "configuration",
-    },
-    {
-      title: "Settings",
-      href: "?tab=settings",
-      icon: Settings,
-      active: activeTab === "settings",
     },
   ];
 
@@ -375,7 +350,7 @@ function DashboardContent() {
     const hash = window.location.hash.replace("#", "");
     if (
       hash &&
-      ["overview", "network", "security", "protocols", "logs", "mqtt"].includes(
+      ["overview", "network", "security", "protocols", "logs", "communication-forward"].includes(
         hash
       )
     ) {
@@ -398,6 +373,35 @@ function DashboardContent() {
       title: "Configuration Saved",
       description: `Device ${deviceId} configuration has been saved.`,
     });
+  };
+
+  // Function to load comprehensive configuration for testing
+  const handleLoadComprehensiveConfig = async () => {
+    setIsLoadingComprehensive(true);
+    
+    try {
+      // Reset to default first
+      resetConfig();
+      
+      // Apply comprehensive configuration
+      Object.keys(comprehensiveConfig).forEach(key => {
+        updateConfig([key], comprehensiveConfig[key as keyof typeof comprehensiveConfig]);
+      });
+      
+      toast({
+        title: "Comprehensive configuration loaded",
+        description: "Test configuration with realistic data has been loaded successfully.",
+      });
+    } catch (error) {
+      console.error('Error loading comprehensive config:', error);
+      toast({
+        title: "Load failed",
+        description: "Failed to load comprehensive configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingComprehensive(false);
+    }
   };
 
   return (
@@ -490,6 +494,19 @@ function DashboardContent() {
                 <DropdownMenuItem onClick={() => setResetDialogOpen(true)}>
                   Reset to Defaults
                 </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleLoadComprehensiveConfig}
+                  disabled={isLoadingComprehensive}
+                >
+                  {isLoadingComprehensive ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading Test Config...
+                    </>
+                  ) : (
+                    "Load Test Configuration"
+                  )}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -570,9 +587,8 @@ function DashboardContent() {
                     </TabsTrigger>
                     <TabsTrigger value="security">Security</TabsTrigger>
                     <TabsTrigger value="protocols">Protocols</TabsTrigger>
-                    <TabsTrigger value="mqtt">MQTT</TabsTrigger>
+                    <TabsTrigger value="communication-forward">Communication Forward</TabsTrigger>
                     <TabsTrigger value="logs">Logs</TabsTrigger>
-                    <TabsTrigger value="hardware">Hardware</TabsTrigger>
                     <TabsTrigger value="configuration">
                       Configuration
                     </TabsTrigger>
@@ -591,8 +607,6 @@ function DashboardContent() {
                       section={searchParams.get("section") || ""}
                       selectedPortId={searchParams.get("portId") || ""}
                       selectedDeviceId={searchParams.get("deviceId") || ""}
-                      ioPorts={ioPorts}
-                      setIoPorts={setIoPorts}
                     />
                   </TabsContent>
 
@@ -604,16 +618,12 @@ function DashboardContent() {
                     <ProtocolsTab />
                   </TabsContent>
 
-                  <TabsContent value="mqtt" className="mt-6 space-y-6">
-                    <MQTTForm />
+                  <TabsContent value="communication-forward" className="mt-6 space-y-6">
+                    <CommunicationForwardTab />
                   </TabsContent>
 
                   <TabsContent value="logs" className="mt-6">
                     <LogsTab />
-                  </TabsContent>
-
-                  <TabsContent value="hardware" className="mt-6">
-                    <HardwareTab />
                   </TabsContent>
 
                   <TabsContent value="configuration" className="mt-6">

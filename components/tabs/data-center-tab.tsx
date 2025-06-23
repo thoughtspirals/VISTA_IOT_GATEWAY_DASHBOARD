@@ -8,22 +8,30 @@ import { UserTagsForm } from "@/components/forms/user-tags-form";
 import { StatsTagsForm } from "@/components/forms/stats-tags-form";
 import { SystemTagsForm } from "@/components/forms/system-tags-form";
 import CalculationTagTab from "@/components/tabs/calculation-tag-tab";
+import { useConfigStore } from "@/lib/stores/configuration-store";
 
 interface DataCenterTabProps {
   section: string;
-  ioPorts: any; // Replace with actual types
-  setIoPorts: (ports: any) => void;
   selectedPortId: string;
   selectedDeviceId: string;
 }
 
 export default function DataCenterTab({
   section,
-  ioPorts,
-  setIoPorts,
   selectedPortId,
   selectedDeviceId,
 }: DataCenterTabProps) {
+  const { config } = useConfigStore();
+  // Map devices to add 'type' property for UI compatibility
+  const ioPorts = config.io_setup.ports.map(port => ({
+    ...port,
+    devices: port.devices.map(device => ({
+      ...device,
+      type: device.deviceType || "",
+      useAsciiProtocol: Boolean(device.useAsciiProtocol),
+    })),
+  }));
+  // setIoPorts is still passed for compatibility, but not used for state
   const handleNavigation = (query: string) => {
     const url = new URL(window.location.href);
     url.search = query;
@@ -110,7 +118,6 @@ export default function DataCenterTab({
         {section === "io-tag" && (
           <IOTagManagement
             ioPorts={ioPorts}
-            setIoPorts={setIoPorts}
             selectedPortId={selectedPortId}
             selectedDeviceId={selectedDeviceId}
           />

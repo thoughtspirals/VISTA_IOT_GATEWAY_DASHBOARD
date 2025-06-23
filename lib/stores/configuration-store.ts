@@ -2,6 +2,7 @@ import { create } from "zustand";
 import YAML from "yaml";
 // defaultConfig will be typed with ConfigSchema in its own file later
 import { defaultConfig } from "@/lib/config/default-config";
+import { Code } from "lucide-react";
 
 // --- BEGIN: Inserted Interface Definitions ---
 
@@ -232,9 +233,53 @@ interface FirewallConfig {
   rules: FirewallRule[];
 }
 
+// DHCP Server Configuration
+interface DHCPServerConfig {
+  enabled: boolean;
+  start_ip: string;
+  end_ip: string;
+  lease_time: number;
+  domain: string;
+  dns_servers: string[];
+}
+
+// Static Route Configuration
+interface StaticRoute {
+  id: string;
+  destination: string;
+  netmask: string;
+  gateway: string;
+  interface: string;
+  metric: number;
+}
+
+// Port Forwarding Rule Configuration
+interface PortForwardingRule {
+  id: string;
+  name: string;
+  protocol: string;
+  external_port: number;
+  internal_ip: string;
+  internal_port: number;
+}
+
+// Dynamic DNS Configuration
+interface DynamicDNSConfig {
+  enabled: boolean;
+  provider: string;
+  domain: string;
+  username: string;
+  password: string;
+  update_interval: number;
+}
+
 interface NetworkConfig {
   interfaces: NetworkInterfaces;
   firewall: FirewallConfig;
+  dhcp_server: DHCPServerConfig;
+  static_routes: StaticRoute[];
+  port_forwarding: PortForwardingRule[];
+  dynamic_dns: DynamicDNSConfig;
 }
 
 interface ModbusTCPConfig {
@@ -413,6 +458,183 @@ interface IOSetupConfig {
   ports: IOPortConfig[]; // Key change: explicitly IOPortConfig[]
 }
 
+export interface BridgeBlock {
+  id: string; 
+  type: 'source' | 'destination' | 'intermediate';
+  subType: 'io-tag' | 'calc-tag' | 'stats-tag' | 'user-tag' | 'system-tag' | 'mqtt-broker' | 'aws-iot' | 'aws-mqtt' | 'rest-api' | 'virtual-memory-map' | 'data-conversion' | 'filter' | 'formula' | null;
+  label: string;
+  config: any;
+}
+
+// Destination Definitions
+export interface MqttBrokerDestination {
+  id: string;
+  name: string;
+  type: 'mqtt-broker';
+  broker: {
+    address: string;
+    port: number;
+    clientId: string;
+    keepalive: number;
+    cleanSession: boolean;
+    tls: {
+      enabled: boolean;
+      version: string;
+      verifyServer: boolean;
+      allowInsecure: boolean;
+      certFile: string;
+      keyFile: string;
+      caFile: string;
+    };
+    auth: {
+      enabled: boolean;
+      username: string;
+      password: string;
+    };
+  };
+  topics: {
+    publish: Array<{
+      path: string;
+      qos: number;
+      retain: boolean;
+    }>;
+    subscribe: Array<{
+      path: string;
+      qos: number;
+    }>;
+  };
+  description?: string;
+}
+
+export interface AwsIotDestination {
+  id: string;
+  name: string;
+  type: 'aws-iot';
+  aws: {
+    region: string;
+    thingName: string;
+    shadow: string;
+    endpoint: string;
+    credentials: {
+      accessKeyId: string;
+      secretAccessKey: string;
+      sessionToken?: string;
+    };
+    certificates: {
+      certFile: string;
+      keyFile: string;
+      caFile: string;
+    };
+  };
+  topics: {
+    publish: Array<{
+      path: string;
+      qos: number;
+    }>;
+    subscribe: Array<{
+      path: string;
+      qos: number;
+    }>;
+  };
+  description?: string;
+}
+
+export interface AwsMqttDestination {
+  id: string;
+  name: string;
+  type: 'aws-mqtt';
+  aws: {
+    region: string;
+    endpoint: string;
+    credentials: {
+      accessKeyId: string;
+      secretAccessKey: string;
+      sessionToken?: string;
+    };
+  };
+  mqtt: {
+    clientId: string;
+    keepalive: number;
+    cleanSession: boolean;
+  };
+  topics: {
+    publish: Array<{
+      path: string;
+      qos: number;
+      retain: boolean;
+    }>;
+    subscribe: Array<{
+      path: string;
+      qos: number;
+    }>;
+  };
+  description?: string;
+}
+
+export interface RestApiDestination {
+  id: string;
+  name: string;
+  type: 'rest-api';
+  api: {
+    baseUrl: string;
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    headers: Record<string, string>;
+    timeout: number;
+    retries: number;
+  };
+  auth: {
+    type: 'none' | 'basic' | 'bearer' | 'api-key';
+    credentials: {
+      username?: string;
+      password?: string;
+      token?: string;
+      apiKey?: string;
+      apiKeyHeader?: string;
+    };
+  };
+  dataMapping: {
+    urlTemplate: string;
+    bodyTemplate?: string;
+    contentType: string;
+  };
+  description?: string;
+}
+
+export interface VirtualMemoryMapDestination {
+  id: string;
+  name: string;
+  type: 'virtual-memory-map';
+  memory: {
+    address: string;
+    dataType: 'int16' | 'int32' | 'float32' | 'float64' | 'string' | 'ascii';
+    length?: number; // For string/ascii types
+    endianness: 'little' | 'big';
+    scaling: {
+      enabled: boolean;
+      factor: number;
+      offset: number;
+    };
+  };
+  description?: string;
+}
+
+export type Destination = 
+  | MqttBrokerDestination 
+  | AwsIotDestination 
+  | AwsMqttDestination 
+  | RestApiDestination 
+  | VirtualMemoryMapDestination;
+
+export interface Bridge {
+  id: string;
+  blocks: BridgeBlock[];
+}
+
+export interface CommunicationForwardConfig {
+  destinations: Destination[];
+  bridges: Bridge[];
+}
+
 // The main configuration schema
 export interface ConfigSchema {
   device: DeviceInfo;
@@ -427,6 +649,7 @@ export interface ConfigSchema {
   calculation_tags: CalculationTag[];
   stats_tags: StatsTag[];
   system_tags: SystemTag[];
+  communication_forward?: CommunicationForwardConfig;
 }
 
 // --- END: Inserted Interface Definitions ---
@@ -514,3 +737,11 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     return get().config; // This now correctly returns ConfigSchema
   },
 }));
+
+export const DESTINATION_TYPES = [
+  { key: "mqtt-broker", label: "MQTT Broker", icon: "/icons/mqtt-broker.svg" },
+  { key: "aws-iot", label: "AWS IoT", icon: "/icons/aws-iot.svg" },
+  { key: "aws-mqtt", label: "AWS MQTT", icon: "/icons/aws-mqtt.svg" },
+  { key: "rest-api", label: "REST API", icon: "/icons/rest-api.svg" },
+  { key: "virtual-memory-map", label: "Virtual Memory Map", icon: "/icons/virtual-memory-map.svg" },
+];

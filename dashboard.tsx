@@ -41,6 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useHydrateConfigFromBackend } from "@/hooks/useHydrateConfigFromBackend";
 
 // Types for the navigation items
 type NavItem = {
@@ -54,6 +55,8 @@ type NavItem = {
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useHydrateConfigFromBackend();
 
   // Navigation items
   const navItems: NavItem[] = [
