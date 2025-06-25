@@ -113,6 +113,19 @@ export function IOPortForm({ onSubmit, existingConfig }: IOPortFormProps) {
     if (!type.trim()) validationErrors.type = "Type is required.";
     if (!name.trim()) validationErrors.name = "Name is required.";
 
+    const allConfigs = getConfig().io_setup.ports;
+    // Get existing configs from the store
+
+    const nameExists = allConfigs.some(
+      (cfg: IOPortConfig) =>
+        cfg.name.trim().toLowerCase() === name.trim().toLowerCase() &&
+        cfg.id !== existingConfig?.id // Allow same name if editing current config
+    );
+
+    if (nameExists) {
+      validationErrors.name = "This name is already used.";
+    }
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       toast({
