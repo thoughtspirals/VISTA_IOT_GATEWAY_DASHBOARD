@@ -55,6 +55,8 @@ import {
 import TagSelectionDialog from "@/components/dialogs/tag-selection-dialog";
 import type { ConfigSchema } from "@/lib/stores/configuration-store"; // adjust the path as needed
 import { useConfigStore } from "@/lib/stores/configuration-store";
+import { toast } from "sonner";
+
 // Define the form schema
 const calculationTagSchema = z.object({
   id: z.string().optional(),
@@ -220,6 +222,19 @@ export function CalculationTagForm({
   // Custom submit logic, called only if validation passes
 
   function onValidSubmit(values: FormValues) {
+    const isDuplicate = calculation_tags.some(
+      (tag) =>
+        tag.name.trim().toLowerCase() === values.name.trim().toLowerCase() &&
+        tag.name !== initialValues?.name // allow same name if editing
+    );
+
+    if (isDuplicate) {
+      toast.error("A calculation tag with this name already exists.", {
+        duration: 5000
+      });
+      return;
+    }
+
     onSubmit(values);
     onCancel();
     console.log("Submitted");
